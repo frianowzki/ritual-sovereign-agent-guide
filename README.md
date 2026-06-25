@@ -18,10 +18,16 @@ Deploy a **production-grade Sovereign Agent** on Ritual Chain using the factory-
 
 ## ⚡ Quick Install
 
-**One command — copy, paste, done:**
+**Linux & macOS — one command:**
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
+```
+
+**Windows PowerShell — one command:**
+
+```powershell
+irm https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.ps1 | iex
 ```
 
 That's it. The installer will:
@@ -30,8 +36,6 @@ That's it. The installer will:
 - Install all dependencies
 - Walk you through configuration step by step
 - Deploy your agent
-
-> **Windows users:** Use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux), then run the command above. See [Windows guide](#windows) for details.
 
 > **No coding knowledge required.** The installer asks simple questions and handles everything automatically.
 
@@ -161,7 +165,22 @@ https://explorer.ritualfoundation.org/agents?kind=sovereign
 
 ### Windows
 
-**Option A — WSL (recommended):**
+**Option A — PowerShell installer (easiest):**
+
+Open **PowerShell** and run:
+
+```powershell
+irm https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.ps1 | iex
+```
+
+> If script execution is blocked, run this first:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+> ```
+
+The installer handles everything: installs Python, Git, dependencies, and walks you through configuration.
+
+**Option B — WSL (Windows Subsystem for Linux):**
 
 1. Open **PowerShell** as Administrator
 2. Run: `wsl --install`
@@ -172,7 +191,7 @@ https://explorer.ritualfoundation.org/agents?kind=sovereign
 curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
 ```
 
-**Option B — Manual setup in PowerShell:**
+**Option C — Manual setup:**
 
 1. Install [Python 3.10+](https://www.python.org/downloads/) (check "Add to PATH")
 2. Install [Git](https://git-scm.com/download/win)
@@ -185,11 +204,6 @@ python -m venv venv
 pip install web3 eciespy eth-abi
 python scripts\deploy.py
 ```
-
-> If script execution is blocked, run first:
-> ```powershell
-> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-> ```
 
 ---
 
@@ -372,7 +386,8 @@ Window 2: [call1] [call2] [call3] [call4] [call5]
 
 ```
 ritual-sovereign-agent-guide/
-├── install.sh                         Interactive installer (one-command setup)
+├── install.sh                         Linux/macOS installer
+├── install.ps1                        Windows PowerShell installer
 ├── README.md                          This file
 ├── .env.example                       Environment template
 ├── .gitignore
