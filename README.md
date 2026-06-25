@@ -1,6 +1,6 @@
 <div align="center">
 
-# ◆ Ritual Sovereign Agent
+# ❖ Ritual Sovereign Agent
 
 ### Factory Harness Deployment Guide
 
