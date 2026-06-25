@@ -129,6 +129,7 @@ def main():
     parser.add_argument("--prompt", help="New prompt (overrides AGENT_PROMPT env)")
     parser.add_argument("--model", help="New model (overrides MODEL env)")
     parser.add_argument("--fund", type=float, default=0.05, help="RITUAL to fund (default: 0.05)")
+    parser.add_argument("--ttl", type=int, default=10000, help="Scheduler TTL in blocks (default: 10000)")
     args = parser.parse_args()
 
     w3 = Web3(Web3.HTTPProvider(RPC_URL))
@@ -197,9 +198,9 @@ def main():
         model, [], 50, 8192, "",
     ]
 
-    schedule = (500000, FREQUENCY, 500, w3.to_wei(20, "gwei"), w3.to_wei(1, "gwei"), 0)
+    schedule = (500000, FREQUENCY, args.ttl, w3.to_wei(20, "gwei"), w3.to_wei(1, "gwei"), 0)
     rolling = (WINDOW_NUM_CALLS, ROLLOVER_THRESHOLD_BPS, 1)
-    lock_duration = 100_000_000
+    lock_duration = 7_400_000  # 30 days
 
     selector = bytes.fromhex("b1906702")
     schedule_tuple = "(uint32,uint32,uint32,uint256,uint256,uint256)"

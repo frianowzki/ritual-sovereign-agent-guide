@@ -325,7 +325,7 @@ def main():
         1,                     # rolloverRetryEveryCalls
     )
 
-    lock_duration = 100_000_000
+    lock_duration = 7_400_000  # 30 days
     scheduler_funding = w3.to_wei(FUND_AMOUNT, "ether")
 
     selector = bytes.fromhex("b1906702")
