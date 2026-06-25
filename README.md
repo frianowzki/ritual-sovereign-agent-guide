@@ -31,7 +31,7 @@ That's it. The installer will:
 - Walk you through configuration step by step
 - Deploy your agent
 
-> **Windows users:** Use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux), then run the command above. Or use the [Python installer](#python-installer-alternative).
+> **Windows users:** Use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux), then run the command above. See [Windows guide](#windows) for details.
 
 > **No coding knowledge required.** The installer asks simple questions and handles everything automatically.
 
@@ -172,7 +172,7 @@ https://explorer.ritualfoundation.org/agents?kind=sovereign
 curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
 ```
 
-**Option B — Python installer:**
+**Option B — Manual setup in PowerShell:**
 
 1. Install [Python 3.10+](https://www.python.org/downloads/) (check "Add to PATH")
 2. Install [Git](https://git-scm.com/download/win)
@@ -180,27 +180,16 @@ curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-gu
 ```powershell
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
 cd ritual-sovereign-agent-guide
-python install.py
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install web3 eciespy eth-abi
+python scripts\deploy.py
 ```
 
 > If script execution is blocked, run first:
 > ```powershell
 > Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 > ```
-
----
-
-### Python Installer (alternative)
-
-If the shell installer doesn't work, use the Python version:
-
-```bash
-git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
-cd ritual-sovereign-agent-guide
-python3 install.py
-```
-
-Works on all platforms (Linux, macOS, Windows). Same interactive wizard, same result.
 
 ---
 
@@ -383,8 +372,7 @@ Window 2: [call1] [call2] [call3] [call4] [call5]
 
 ```
 ritual-sovereign-agent-guide/
-├── install.sh                         Shell installer (primary)
-├── install.py                         Python installer (alternative)
+├── install.sh                         Interactive installer (one-command setup)
 ├── README.md                          This file
 ├── .env.example                       Environment template
 ├── .gitignore
