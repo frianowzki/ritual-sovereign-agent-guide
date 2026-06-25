@@ -1,234 +1,500 @@
-# Ritual Sovereign Agent — Factory Harness Deployment Guide
+<div align="center">
 
-Deploy a production-grade Sovereign Agent on Ritual Chain using the factory-backed harness pattern. This guide covers everything from environment setup to automated scheduling.
+# ◆ Ritual Sovereign Agent
 
-> **Chain:** Ritual (ID `1979`) | **RPC:** `https://rpc.ritualfoundation.org` | **Block time:** ~350ms
+### Factory Harness Deployment Guide
+
+[![Chain](https://img.shields.io/badge/Chain-Ritual%201979-purple?style=flat-square)](https://explorer.ritualfoundation.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+Deploy a **production-grade Sovereign Agent** on Ritual Chain using the factory-backed harness pattern.
+
+*Autonomous AI agents that run on-chain, execute in TEE, and deliver results via async callbacks.*
+
+<br/>
+
+```
+Your EOA ──deployHarness──▶ Factory ──CREATE3──▶ Harness Contract
+   │
+   │  configureFundAndStart
+   ▼
+Harness ──schedule()──▶ Scheduler
+   │
+   │  wakeUp() every 2000 blocks
+   ▼
+Precompile 0x080C ──TEE──▶ AI Model (Gemini / GPT / Claude)
+   │
+   │  Phase 2 callback
+   ▼
+Harness ◀──onSovereignAgentResult── Executor
+```
+
+<br/>
+
+[Quick Start](#quick-start) · [Platform Setup](#platform-setup) · [Environment](#environment-configuration) · [Deploy](#deployment) · [Custom Prompts](#custom-prompts) · [Monitoring](#monitoring) · [Troubleshooting](#troubleshooting)
+
+</div>
+
+---
+
+## Table of Contents
+
+- [What You'll Build](#what-youll-build)
+- [Quick Start](#quick-start)
+- [Platform Setup](#platform-setup)
+  - [Linux](#linux)
+  - [macOS](#macos)
+  - [Windows](#windows)
+- [Environment Configuration](#environment-configuration)
+  - [LLM Providers](#llm-providers)
+  - [HuggingFace Setup](#huggingface-setup)
+  - [Full Variable Reference](#full-variable-reference)
+- [Deployment](#deployment)
+  - [Step 1: Deploy Harness](#step-1-deploy-harness)
+  - [Step 2: Verify on Explorer](#step-2-verify-on-explorer)
+  - [Step 3: Monitor Agent](#step-3-monitor-agent)
+- [Custom Prompts](#custom-prompts)
+- [Reconfiguration](#reconfiguration)
+- [Monitoring & Management](#monitoring--management)
+- [Architecture](#architecture)
+- [Cost Breakdown](#cost-breakdown)
+- [Troubleshooting](#troubleshooting)
+- [File Structure](#file-structure)
+- [References](#references)
 
 ---
 
 ## What You'll Build
 
 A **Sovereign Agent** — an on-chain AI agent that:
-- Runs autonomously on a schedule (every ~11.7 minutes)
-- Calls the `0x080C` precompile via a factory-deployed harness
-- Uses TEE-verified executors for off-chain AI inference
-- Delivers results via async Phase 2 callbacks
-- Stores conversation history on HuggingFace
 
-```
-┌──────────────┐    deployHarness     ┌──────────────┐
-│  Your EOA    │ ──────────────────▶  │   Factory    │ ─── CREATE3 ──▶ Harness
-└──────────────┘                      └──────────────┘
-       │
-       │  configureFundAndStart
-       ▼
-┌──────────────┐    schedule()        ┌──────────────┐
-│   Harness    │ ──────────────────▶  │  Scheduler   │
-└──────────────┘                      └──────────────┘
-       │                                     │
-       │  wakeUp() every 2000 blocks         │
-       ▼                                     │
-┌──────────────┐    0x080C call        ┌──────────────┐
-│  Precompile  │ ──────────────────▶  │  Executor    │ ─── TEE ──▶ AI Model
-│   0x080C     │                      │   (TEE)      │
-└──────────────┘                      └──────────────┘
-       │                                     │
-       │  Phase 2 callback                   │
-       ▼                                     │
-┌──────────────┐    onSovereignAgentResult   │
-│   Harness    │ ◀──────────────────────────┘
-└──────────────┘
-```
+- ◆ Runs autonomously on a rolling schedule (~every 11.7 min)
+- ◆ Calls the `0x080C` precompile via a factory-deployed harness
+- ◆ Uses **TEE-verified executors** for off-chain AI inference
+- ◆ Delivers results via async Phase 2 callbacks
+- ◆ Stores conversation history on **HuggingFace**
+- ◆ Supports any LLM provider (OpenRouter, OpenAI, Anthropic, Gemini)
 
----
-
-## Prerequisites
-
-- Python 3.10+
-- Ritual Chain wallet with **≥ 0.2 RITUAL** (testnet)
-- HuggingFace account + token
-- One LLM API key (OpenRouter, OpenAI, Anthropic, or Gemini)
+The agent appears on the [Ritual Explorer](https://explorer.ritualfoundation.org/agents?kind=sovereign) as **Sovereign + Monitored**.
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Clone this repo
-git clone https://github.com/frianowzki/ritual-factory-harness-guide.git
-cd ritual-factory-harness-guide
+# 1. Clone
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
 
 # 2. Install dependencies
 pip install web3 eciespy eth-abi
 
-# 3. Copy and fill .env
+# 3. Configure
 cp .env.example .env
-nano .env  # fill in your keys
+# Edit .env with your keys (see Environment Configuration below)
 
 # 4. Deploy
 python3 scripts/deploy.py
 ```
 
+**That's it.** The script handles prediction, deployment, ECIES encryption, calldata encoding, and scheduler configuration in one run.
+
 ---
 
-## Environment Setup
+## Platform Setup
 
-Copy `.env.example` to `.env` and fill in your values:
+### Linux
+
+**Ubuntu / Debian:**
+```bash
+# Python 3.10+
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv git
+
+# Clone and setup
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 -m venv venv
+source venv/bin/activate
+pip install web3 eciespy eth-abi
+```
+
+**Fedora / RHEL:**
+```bash
+sudo dnf install -y python3 python3-pip git
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 -m venv venv
+source venv/bin/activate
+pip install web3 eciespy eth-abi
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S python python-pip git
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 -m venv venv
+source venv/bin/activate
+pip install web3 eciespy eth-abi
+```
+
+---
+
+### macOS
+
+```bash
+# Install Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Python 3.10+ and Git
+brew install python git
+
+# Clone and setup
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 -m venv venv
+source venv/bin/activate
+pip install web3 eciespy eth-abi
+```
+
+> **Note:** macOS comes with Python 3.9 pre-installed. `brew install python` gives you 3.12+ which is required.
+
+**Apple Silicon (M1/M2/M3) users:**
+If you hit build errors with `eciespy`, install Rust first:
+```bash
+brew install rust
+pip install web3 eciespy eth-abi
+```
+
+---
+
+### Windows
+
+**Option A — Python directly (recommended):**
+
+1. **Install Python 3.10+** from [python.org](https://www.python.org/downloads/)
+   - ✅ Check **"Add Python to PATH"** during installation
+   - ✅ Check **"Install pip"**
+
+2. **Install Git** from [git-scm.com](https://git-scm.com/download/win)
+   - Use default settings during installation
+
+3. **Open PowerShell** and run:
+```powershell
+# Clone
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+
+# Create virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install web3 eciespy eth-abi
+```
+
+> **If `Activate.ps1` is blocked**, run this first:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+**Option B — WSL (Windows Subsystem for Linux):**
+
+```powershell
+# In PowerShell (as Administrator)
+wsl --install
+# Restart computer, then open "Ubuntu" from Start menu
+
+# Inside WSL Ubuntu
+sudo apt update && sudo apt install -y python3 python3-pip git
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 -m venv venv
+source venv/bin/activate
+pip install web3 eciespy eth-abi
+```
+
+> **Recommendation:** Use WSL if you're comfortable with it — the Linux toolchain is more reliable for Web3 development.
+
+**Windows-specific notes:**
+- Use `python` instead of `python3` in PowerShell
+- Use `.\venv\Scripts\Activate.ps1` instead of `source venv/bin/activate`
+- Use backslashes `\` in paths, or forward slashes `/` in Python scripts
+- If `eciespy` fails to install, try: `pip install eciespy --only-binary :all:`
+
+---
+
+## Environment Configuration
+
+Copy the example and fill in your values:
 
 ```bash
 cp .env.example .env
 ```
 
-### Required Variables
+### LLM Providers
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PRIVATE_KEY` | Your EOA private key (0x-prefixed) | `0xabc123...` |
-| `HF_TOKEN` | HuggingFace access token | `hf_abc123...` |
-| `HF_REPO_ID` | HuggingFace dataset (user/repo format) | `myuser/agent-data` |
-| `LLM_PROVIDER` | One of: `openrouter`, `openai`, `anthropic`, `gemini` | `openrouter` |
-| `OPENROUTER_API_KEY` | OpenRouter API key (if using OpenRouter) | `sk-or-v1-abc...` |
+Choose **one** provider and set the corresponding API key.
 
-### Optional Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MODEL` | LLM model identifier | `google/gemini-2.5-flash` |
-| `AGENT_PROMPT` | Custom prompt for your agent | See `templates/default-prompt.txt` |
-| `SALT` | Unique salt for deterministic deployment | `my-sovereign-agent` |
-| `CLI_TYPE` | Agent runtime type (5=crush, 6=zeroclaw) | `5` |
-| `FREQUENCY` | Blocks between executions | `2000` (~11.7 min) |
-| `WINDOW_NUM_CALLS` | Calls per rolling window | `5` |
-| `FUND_AMOUNT` | RITUAL to fund harness | `0.1` |
-
-### LLM Provider Setup
-
-**OpenRouter (recommended — cheapest):**
-```bash
+**◆ OpenRouter** (recommended — cheapest, access to 100+ models)
+```env
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=sk-or-v1-your-key-here
 MODEL=google/gemini-2.5-flash
 ```
+Get key → [openrouter.ai/keys](https://openrouter.ai/keys)
 
-**OpenAI:**
-```bash
+**◆ OpenAI**
+```env
 LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-your-key-here
 MODEL=gpt-4o-mini
 ```
+Get key → [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 
-**Anthropic:**
-```bash
+**◆ Anthropic**
+```env
 LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 MODEL=claude-sonnet-4-5-20250929
 ```
+Get key → [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
 
-**Gemini:**
-```bash
+**◆ Google Gemini**
+```env
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your-key-here
 MODEL=gemini-2.5-flash
 ```
+Get key → [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+
+---
 
 ### HuggingFace Setup
 
-1. Go to [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
-2. Create a token with **write** access
-3. Create a dataset repo (e.g., `yourname/agent-data`)
-4. Set in `.env`:
-   ```bash
+HuggingFace stores your agent's conversation history and artifacts.
+
+1. Create account at [huggingface.co](https://huggingface.co)
+2. Go to **Settings > Access Tokens** → [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+3. Create a token with **write** access
+4. Go to **New Dataset** → [huggingface.co/new-dataset](https://huggingface.co/new-dataset)
+5. Create a dataset (e.g., `yourname/agent-data`)
+6. Set in `.env`:
+   ```env
    HF_TOKEN=hf_your_token_here
    HF_REPO_ID=yourname/agent-data
    ```
 
----
-
-## Custom Prompts
-
-Edit `templates/default-prompt.txt` or set `AGENT_PROMPT` in `.env`.
-
-The prompt is what the AI agent sees every time it wakes up. Make it specific:
-
-```
-# Good — specific task
-"You are a DeFi analytics agent. Fetch the top 10 altcoin prices from 
-CoinGecko API, calculate 24h change percentages, and identify the 
-biggest movers. Return a concise market summary."
-
-# Good — recurring analysis
-"You are Hive, a sovereign AI agent on Ritual Chain. Monitor RITUAL 
-token price, check recent transactions on the explorer, and provide 
-a brief market sentiment analysis. Focus on unusual activity."
-
-# Bad — too vague
-"Do something useful."
-```
-
-### Prompt Templates
-
-See `templates/` for ready-made prompts:
-- `default-prompt.txt` — General DeFi analytics
-- `market-monitor.txt` — Price tracking + alerts
-- `research-agent.txt` — Web research + summarization
+> **Important:** `HF_REPO_ID` must be in `username/repo-name` format. Not a URL, not a token.
 
 ---
 
-## Deployment Script
+### Full Variable Reference
 
-### `scripts/deploy.py`
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `PRIVATE_KEY` | ✅ | EOA private key (0x-prefixed) | — |
+| `HF_TOKEN` | ✅ | HuggingFace write token | — |
+| `HF_REPO_ID` | ✅ | HuggingFace dataset (`user/repo`) | — |
+| `LLM_PROVIDER` | ✅ | `openrouter` / `openai` / `anthropic` / `gemini` | — |
+| `*_API_KEY` | ✅ | API key for chosen provider | — |
+| `RPC_URL` | — | Ritual Chain RPC | `https://rpc.ritualfoundation.org` |
+| `MODEL` | — | LLM model identifier | Provider default |
+| `AGENT_PROMPT` | — | Custom agent prompt (overrides template) | `templates/default-prompt.txt` |
+| `SALT` | — | Unique salt for deterministic deploy | `my-sovereign-agent` |
+| `CLI_TYPE` | — | Runtime type (5=Crush, 6=ZeroClaw) | `5` |
+| `FREQUENCY` | — | Blocks between executions | `2000` (~11.7 min) |
+| `WINDOW_NUM_CALLS` | — | Calls per rolling window | `5` |
+| `ROLLOVER_THRESHOLD_BPS` | — | Rollover threshold (basis points) | `5000` (50%) |
+| `FUND_AMOUNT` | — | RITUAL to fund harness | `0.1` |
 
-Full deployment: predict → deploy harness → build calldata → configure + fund + start.
+---
+
+## Deployment
+
+### Step 1: Deploy Harness
 
 ```bash
 python3 scripts/deploy.py
 ```
 
-**What it does:**
-1. Checks pending jobs (sender lock)
+The script automatically:
+1. Checks for pending async jobs (sender lock)
 2. Predicts harness address via `predictHarness`
 3. Deploys harness via `deployHarness` (3M gas)
-4. Discovers executor from TEEServiceRegistry
-5. Encrypts secrets with ECIES (12-byte nonce)
-6. Builds 23-field SovereignAgentParams
-7. Calls `configureFundAndStart` (5M gas, 0.1 RITUAL)
+4. Discovers TEE executor from registry
+5. Encrypts LLM credentials with ECIES (12-byte nonce)
+6. Builds 23-field `SovereignAgentParams`
+7. Calls `configureFundAndStart` (5M gas)
 
-**Output:**
+**Expected output:**
 ```
-✅ Harness deployed: 0x...
-✅ Configured + funded!
-Explorer: https://explorer.ritualfoundation.org/address/0x...
+Sender: 0x63C5...
+Chain: 1979
+Balance: 0.5432 RITUAL
+Salt: my-sovereign-agent
+
+✅ No pending jobs
+
+Predicted harness: 0xEc87...
+
+── Step 1: deployHarness ──
+  tx: 0xabc...
+  status: ✅ OK (gas 943627)
+✅ Harness deployed: 0xEc87...
+
+── Step 2: Build calldata ──
+Executor: 0x1234...
+Secrets encrypted (184 bytes)
+Model: google/gemini-2.5-flash
+
+── Step 3: configureFundAndStart ──
+Funding: 0.1 RITUAL
+  tx: 0xdef...
+  status: ✅ OK (gas 3178666)
+
+════════════════════════════════════════════════════════════
+✅ SOVEREIGN AGENT DEPLOYED + CONFIGURED!
+Harness: 0xEc87F4Cf6f1AD2fd47bfbB25b7FDAE093Fb6b097
+Explorer: https://explorer.ritualfoundation.org/address/0xEc87...
+Schedule: every 2000 blocks (~11.7 min)
+Window: 5 calls per window
+Funding: 0.1 RITUAL
+Model: google/gemini-2.5-flash
+════════════════════════════════════════════════════════════
 ```
 
-### `scripts/reconfigure.py`
+### Step 2: Verify on Explorer
 
-Reconfigure an existing harness (new prompt, model, or funding).
+1. Open your harness on the explorer:
+   ```
+   https://explorer.ritualfoundation.org/address/0xYOUR_HARNESS
+   ```
 
-```bash
-python3 scripts/reconfigure.py --harness 0xYourHarnessAddress
-```
+2. Check the **Agents** page:
+   ```
+   https://explorer.ritualfoundation.org/agents?kind=sovereign
+   ```
 
-**What it does:**
-1. Calls `stop()` on existing harness
-2. Builds new calldata with updated config
-3. Calls `configureFundAndStart` with new params
+3. Your agent should show as **Sovereign + Monitored** ✅
 
-### `scripts/check-status.py`
-
-Check harness status, balance, and schedule.
+### Step 3: Monitor Agent
 
 ```bash
 python3 scripts/check-status.py --harness 0xYourHarnessAddress
 ```
 
-**Output:**
+---
+
+## Custom Prompts
+
+Your agent's prompt defines what it does every time it wakes up. Edit `templates/default-prompt.txt` or set `AGENT_PROMPT` in `.env`.
+
+### Writing Effective Prompts
+
 ```
-Harness: 0x...
-Owner: 0x...
-Configured: true
-Wake Mode: ROLLING_FIXED_WINDOW (1)
-RitualWallet Balance: 0.119 RITUAL
-Schedule: frequency=2000, windowNumCalls=5
+◆ Good — specific task with clear output format
+"You are a DeFi analytics agent. Fetch the top 10 altcoin prices from
+CoinGecko API, calculate 24h change percentages, and identify the
+biggest movers. Return a concise market summary with buy/sell signals."
+
+◆ Good — on-chain monitoring
+"You are Hive, a sovereign AI agent on Ritual Chain. Monitor RITUAL
+token price, check recent transactions on the explorer, and provide
+a brief market sentiment analysis. Focus on unusual activity."
+
+◆ Bad — too vague
+"Do something useful."
+```
+
+### Prompt Templates
+
+Ready-made prompts in `templates/`:
+
+| Template | Description | Best For |
+|----------|-------------|----------|
+| `default-prompt.txt` | General DeFi analytics | Getting started |
+| `market-monitor.txt` | Price tracking + alerts | Traders |
+| `research-agent.txt` | Web research + summarization | Researchers |
+
+### Prompt from File
+
+```env
+# In .env
+AGENT_PROMPT=You are a sovereign agent. Your task is to...
+```
+
+Or edit the template file directly:
+```bash
+nano templates/default-prompt.txt
+```
+
+---
+
+## Reconfiguration
+
+Update prompt, model, or funding on an existing harness:
+
+```bash
+# New prompt
+python3 scripts/reconfigure.py --harness 0xYourHarness --prompt "New prompt here"
+
+# New model
+python3 scripts/reconfigure.py --harness 0xYourHarness --model gpt-4o
+
+# Add funding
+python3 scripts/reconfigure.py --harness 0xYourHarness --fund 0.05
+
+# All together
+python3 scripts/reconfigure.py --harness 0xYourHarness \
+  --prompt "New task" \
+  --model anthropic/claude-sonnet-4-5-20250929 \
+  --fund 0.1
+```
+
+---
+
+## Monitoring & Management
+
+### Check Status
+
+```bash
+python3 scripts/check-status.py --harness 0xYourHarnessAddress
+```
+
+### Cast Commands (with [Foundry](https://book.getfoundry.sh/getting-started/installation))
+
+```bash
+# Is it configured?
+cast call 0xYOUR_HARNESS "configured()(bool)" \
+  --rpc-url https://rpc.ritualfoundation.org
+
+# Wake mode (needs --from owner)
+cast call 0xYOUR_HARNESS "wakeMode()(uint8)" \
+  --from YOUR_EOA \
+  --rpc-url https://rpc.ritualfoundation.org
+
+# Schedule config
+cast call 0xYOUR_HARNESS "scheduleConfig()(uint32,uint32,uint32,uint256,uint256,uint256)" \
+  --from YOUR_EOA \
+  --rpc-url https://rpc.ritualfoundation.org
+
+# RitualWallet balance
+cast call 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948 \
+  "balanceOf(address)(uint256)" 0xYOUR_HARNESS \
+  --rpc-url https://rpc.ritualfoundation.org
+```
+
+### Top-Up Funding
+
+```bash
+cast send 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948 \
+  "deposit(uint256)" 100000000 \
+  --value 0.1ether \
+  --private-key $PRIVATE_KEY \
+  --rpc-url https://rpc.ritualfoundation.org
 ```
 
 ---
@@ -239,156 +505,150 @@ Schedule: frequency=2000, windowNumCalls=5
 
 | Contract | Address | Purpose |
 |----------|---------|---------|
-| SovereignAgentFactory | `0x9dC4C054e53bCc4Ce0A0Ff09E890A7a8e817f304` | Deploys harnesses |
-| TEEServiceRegistry | `0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F` | Executor discovery |
-| AsyncJobTracker | `0xC069FFCa0389f44eCA2C626e55491b0ab045AEF5` | Job lifecycle |
-| AsyncDelivery | `0x5A16214fF555848411544b005f7Ac063742f39F6` | Phase 2 callbacks |
-| RitualWallet | `0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948` | Fee escrow |
-| Scheduler | `0x56e776BAE2DD60664b69Bd5F865F1180ffB7D58B` | Recurring execution |
+| SovereignAgentFactory | `0x9dC4...304` | Deploys harnesses via CREATE3 |
+| TEEServiceRegistry | `0x9644...47F` | Executor discovery + validation |
+| AsyncJobTracker | `0xC069...EF5` | Job lifecycle + sender locks |
+| AsyncDelivery | `0x5A16...9F6` | Phase 2 callback delivery |
+| RitualWallet | `0x532F...948` | Fee escrow + lock management |
+| Scheduler | `0x56e7...58B` | Recurring execution triggers |
 
-### Rolling Window
-
-The harness uses a rolling window to ensure continuous operation:
+### Rolling Window Lifecycle
 
 ```
-Window 1: [call1, call2, call3, call4, call5]
-                                    ↑ threshold (50%)
-                                    Window 2 scheduled here
-Window 2: [call1, call2, call3, call4, call5]
-                                    ↑
-                                    Window 3 scheduled
-...and so on
+Window 1: [call1] [call2] [call3] [call4] [call5]
+                                          ↑ 50% threshold
+                                          Window 2 auto-scheduled
+Window 2: [call1] [call2] [call3] [call4] [call5]
+                                          ↑
+                                          Window 3 auto-scheduled
+                    ...continuous operation...
 ```
 
 | Parameter | Value | Meaning |
 |-----------|-------|---------|
 | `windowNumCalls` | 5 | 5 calls per window |
 | `frequency` | 2000 | ~11.7 min between calls |
-| `rolloverThresholdBps` | 5000 | Start next window at 50% |
+| `rolloverThresholdBps` | 5000 | Schedule next window at 50% |
 | `rolloverRetryEveryCalls` | 1 | Retry scheduling every call |
 
-### Cost Breakdown
+---
 
-| Step | Gas | Cost (~250 gwei) |
-|------|-----|------------------|
+## Cost Breakdown
+
+| Step | Gas Used | Cost (~250 gwei) |
+|------|----------|------------------|
 | `deployHarness` | ~943k | ~0.005 RITUAL |
 | `configureFundAndStart` | ~3.2M | ~0.016 RITUAL |
 | Fund harness (deposit) | — | 0.1 RITUAL |
 | **Total setup** | — | **~0.12 RITUAL** |
-| Per heartbeat (on-chain gas) | ~200k | ~0.002 RITUAL |
+| Per heartbeat (on-chain) | ~200k | ~0.002 RITUAL |
 
-0.1 RITUAL funds ~50 heartbeats (~1 month at 1x/day, or ~2 months at every-other-day).
+> **0.1 RITUAL** funds ~50 heartbeats (~1 month at 1x/day, ~2 months at every-other-day).
+>
+> TEE execution cost is paid by the executor, **not your contract**.
 
 ---
 
-## Pitfalls & Solutions
+## Troubleshooting
 
-### 1. `DeploymentFailed()` (0x30116425)
+<details>
+<summary><strong>◆ <code>DeploymentFailed()</code> (0x30116425)</strong></summary>
 
 **Cause:** `deployHarness` gas limit too low (< 3M).
-**Fix:** Set gas limit to 3,000,000+.
+**Fix:** The script sets 3M by default. If you're calling manually:
+```python
+send_tx(w3, deploy_data, FACTORY, gas_limit=3_000_000)
+```
+</details>
 
-### 2. `configureFundAndStart` reverts with no reason
+<details>
+<summary><strong>◆ <code>configureFundAndStart</code> reverts silently</strong></summary>
 
-**Cause:** Gas limit too low (~3M). Actual usage is ~3.2M.
+**Cause:** Gas limit too low (~3M). Actual usage: ~3.2M.
 **Fix:** Set gas limit to 5,000,000.
+</details>
 
-### 3. ECIES silent failure
+<details>
+<summary><strong>◆ ECIES silent failure</strong></summary>
 
 **Cause:** Wrong nonce length (16 instead of 12).
-**Fix:** Always set `ECIES_CONFIG.symmetric_nonce_length = 12`.
+**Fix:** Always set before encrypting:
+```python
+ECIES_CONFIG.symmetric_nonce_length = 12
+```
+</details>
 
-### 4. `InvalidDeliveryTarget()`
+<details>
+<summary><strong>◆ <code>InvalidDeliveryTarget()</code></strong></summary>
 
 **Cause:** `deliveryTarget` doesn't match predicted harness address.
-**Fix:** Use `predictHarness()` result, not factory address.
+**Fix:** Use `predictHarness()` result as delivery target, not the factory address.
+</details>
 
-### 5. Sender locked
+<details>
+<summary><strong>◆ Sender locked</strong></summary>
 
 **Cause:** Another async job pending for your EOA.
-**Fix:** Wait for current job to settle, or use different key.
-**Check:** `cast call 0xC069...aef5 "hasPendingJobForSender(address)(bool)" YOUR_ADDRESS`
+**Check:**
+```bash
+cast call 0xC069FFCa0389f44eCA2C626e55491b0ab045AEF5 \
+  "hasPendingJobForSender(address)(bool)" YOUR_ADDRESS \
+  --rpc-url https://rpc.ritualfoundation.org
+```
+**Fix:** Wait for current job to settle, or use a different key.
+</details>
 
-### 6. `ModeNotSupported()` on `wakeMode()`
+<details>
+<summary><strong>◆ <code>ModeNotSupported()</code> on <code>wakeMode()</code></strong></summary>
 
 **Cause:** Function requires `msg.sender == owner`.
 **Fix:** Use `--from OWNER_ADDRESS` when calling via cast.
+</details>
 
-### 7. HF_REPO_ID format
+<details>
+<summary><strong>◆ <code>pip install eciespy</code> fails on macOS</strong></summary>
 
-**Must be:** `username/repo-name` (slash-separated)
-**Not:** A URL, or `hf_` prefixed token
+**Cause:** Missing Rust compiler for native extensions.
+**Fix:**
+```bash
+brew install rust
+pip install eciespy
+```
+</details>
+
+<details>
+<summary><strong>◆ PowerShell: script execution is blocked</strong></summary>
+
+**Cause:** Windows default execution policy.
+**Fix:**
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+</details>
 
 ---
 
-## Monitoring
-
-### Check Harness Status
-
-```bash
-# Configured?
-cast call 0xYOUR_HARNESS "configured()(bool)" --rpc-url https://rpc.ritualfoundation.org
-
-# Wake mode (needs --from owner)
-cast call 0xYOUR_HARNESS "wakeMode()(uint8)" --from YOUR_EOA --rpc-url https://rpc.ritualfoundation.org
-
-# Schedule config
-cast call 0xYOUR_HARNESS "scheduleConfig()(uint32,uint32,uint32,uint256,uint256,uint256)" --from YOUR_EOA --rpc-url https://rpc.ritualfoundation.org
-
-# Rolling config
-cast call 0xYOUR_HARNESS "rollingConfig()(uint32,uint16,uint16)" --from YOUR_EOA --rpc-url https://rpc.ritualfoundation.org
-```
-
-### Check Wallet Balance
-
-```bash
-# Harness RitualWallet balance
-cast call 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948 "balanceOf(address)(uint256)" 0xYOUR_HARNESS --rpc-url https://rpc.ritualfoundation.org
-
-# Lock expiry
-cast call 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948 "lockUntil(address)(uint256)" 0xYOUR_HARNESS --rpc-url https://rpc.ritualfoundation.org
-```
-
-### Explorer
-
-- **Agents page:** `https://explorer.ritualfoundation.org/agents?kind=sovereign`
-- **Your harness:** `https://explorer.ritualfoundation.org/address/0xYOUR_HARNESS`
-
----
-
-## Top-Up Funding
-
-When balance runs low, add more RITUAL:
-
-```bash
-# From EOA to harness RitualWallet
-cast send 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948 \
-  "deposit(uint256)" 100000000 \
-  --value 0.1ether \
-  --private-key $PRIVATE_KEY \
-  --rpc-url https://rpc.ritualfoundation.org
-```
-
-Or use the reconfigure script to stop → reconfigure with new funding.
-
----
-
-## Files
+## File Structure
 
 ```
-ritual-factory-harness-guide/
-├── README.md                    # This guide
-├── .env.example                 # Environment template
+ritual-sovereign-agent-guide/
+│
+├── README.md                          You are here
+├── .env.example                       Environment template
+├── .gitignore                         Git ignore rules
+│
 ├── scripts/
-│   ├── deploy.py                # Full deployment script
-│   ├── reconfigure.py           # Reconfigure existing harness
-│   └── check-status.py          # Check harness status
+│   ├── deploy.py                      Full deployment (predict → deploy → configure)
+│   ├── reconfigure.py                 Update existing harness
+│   └── check-status.py                Check harness status + balance
+│
 ├── templates/
-│   ├── default-prompt.txt       # Default agent prompt
-│   ├── market-monitor.txt       # Price monitoring prompt
-│   └── research-agent.txt       # Web research prompt
+│   ├── default-prompt.txt             General DeFi analytics prompt
+│   ├── market-monitor.txt             Price tracking + alerts prompt
+│   └── research-agent.txt             Web research + summarization prompt
+│
 └── references/
-    └── factory-harness-deployment.md  # Technical reference
+    └── factory-harness-deployment.md  Technical reference + pitfalls
 ```
 
 ---
@@ -398,10 +658,20 @@ ritual-factory-harness-guide/
 - [Ritual dApp Skills](https://github.com/ritual-foundation/ritual-dapp-skills) — Official skills + examples
 - [Ritual Docs](https://docs.ritualfoundation.org) — Chain documentation
 - [Ritual Explorer](https://explorer.ritualfoundation.org) — Block explorer
-- [Sovereign Agent Guide](https://github.com/samarth67/ritual-sovereign-agent-guide) — Windows setup guide
+- [Ritual Explorer — Agents](https://explorer.ritualfoundation.org/agents?kind=sovereign) — Sovereign agents page
 
 ---
 
 ## License
 
 MIT
+
+---
+
+<div align="center">
+
+**Built on [Ritual Chain](https://ritualfoundation.org) — Chain ID 1979**
+
+*Block time: ~350ms · EIP-1559 supported · Precompile `0x080C`*
+
+</div>
