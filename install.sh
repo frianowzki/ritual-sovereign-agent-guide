@@ -360,21 +360,31 @@ step_install_deps() {
     pip install web3 2>/dev/null && echo -e "  ${DIM}  Installing web3...${RESET}    ${GREEN}${CHECK}${RESET} web3"
 
     echo -ne "  ${DIM}  Installing eciespy...${RESET}\r"
-    if pip install eciespy 2>/dev/null; then
+    if pip install eciespy --only-binary :all: 2>/dev/null; then
         echo -e "  ${DIM}  Installing eciespy...${RESET}  ${GREEN}${CHECK}${RESET} eciespy"
     else
-        echo ""
-        warn "eciespy install failed"
-        if [ "$DISTRO" = "macos" ]; then
-            info "Try: ${CYAN}brew install rust${RESET} then re-run"
+        # Try building from source
+        echo -e "  ${DIM}  Installing eciespy...${RESET}  ${YELLOW}${WARN}${RESET} no prebuilt wheel, building..."
+        if pip install eciespy 2>/dev/null; then
+            echo -e "  ${DIM}  Building eciespy...${RESET}     ${GREEN}${CHECK}${RESET} eciespy"
+        else
+            # Install Rust and retry
+            warn "eciespy needs Rust compiler — installing automatically..."
+            if [ "$DISTRO" = "macos" ]; then
+                brew install rust 2>/dev/null || true
+            else
+                curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y 2>/dev/null
+                export PATH="$HOME/.cargo/bin:$PATH"
+            fi
+            if pip install eciespy 2>/dev/null; then
+                echo -e "  ${DIM}  Building eciespy (with Rust)...${RESET} ${GREEN}${CHECK}${RESET} eciespy"
+            else
+                echo ""
+                error "Could not install eciespy even with Rust."
+                info "Try manually: ${CYAN}pip install eciespy${RESET}"
+                exit 1
+            fi
         fi
-        info "Attempting alternative: pip install eciespy --no-build-isolation"
-        pip install eciespy --no-build-isolation 2>/dev/null || {
-            error "Could not install eciespy. Install Rust and try again:"
-            echo -e "    ${CYAN}curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh${RESET}"
-            echo -e "    ${CYAN}pip install eciespy${RESET}"
-            exit 1
-        }
     fi
 
     echo -ne "  ${DIM}  Installing eth-abi...${RESET}\r"
