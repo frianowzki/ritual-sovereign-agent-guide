@@ -18,10 +18,10 @@ Deploy a **production-grade Sovereign Agent** on Ritual Chain using the factory-
 
 ## ⚡ Quick Install
 
-**Linux & macOS — one command:**
+**Linux & macOS — two commands:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh -o install.sh && bash install.sh
 ```
 
 **Windows PowerShell — one command:**
@@ -82,7 +82,7 @@ That's it. The installer will:
 **Step 2: Run the installer**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh -o install.sh && bash install.sh
 ```
 
 The installer will:

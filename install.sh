@@ -11,7 +11,7 @@
 #    bash install.sh
 #
 #  One-liner:
-#    curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
+#    curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh -o install.sh && bash install.sh
 # ═══════════════════════════════════════════════════════════════
 
 set -e
