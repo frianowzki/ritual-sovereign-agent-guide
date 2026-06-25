@@ -82,6 +82,23 @@ The agent appears on the [Ritual Explorer](https://explorer.ritualfoundation.org
 
 ## Quick Start
 
+**One command — interactive installer handles everything:**
+
+```bash
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 install.py
+```
+
+The installer will:
+- Check your system (Python, pip, git)
+- Install dependencies
+- Guide you through private key, LLM provider, API key, prompt, HuggingFace setup
+- Generate `.env` with all configuration
+- Deploy your sovereign agent
+
+**Or set up manually:**
+
 ```bash
 # 1. Clone
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
@@ -98,7 +115,7 @@ cp .env.example .env
 python3 scripts/deploy.py
 ```
 
-**That's it.** The script handles prediction, deployment, ECIES encryption, calldata encoding, and scheduler configuration in one run.
+The deploy script handles prediction, deployment, ECIES encryption, calldata encoding, and scheduler configuration in one run.
 
 ---
 
@@ -634,6 +651,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ritual-sovereign-agent-guide/
 │
 ├── README.md                          You are here
+├── install.py                         Interactive one-script installer
 ├── .env.example                       Environment template
 ├── .gitignore                         Git ignore rules
 │
