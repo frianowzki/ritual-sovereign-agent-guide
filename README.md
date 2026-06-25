@@ -188,7 +188,7 @@ The installer handles everything: installs Python, Git, dependencies, and walks 
 4. Open **Ubuntu** from the Start menu
 5. Run:
 ```bash
-curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh -o install.sh && bash install.sh
 ```
 
 **Option C — Manual setup:**
@@ -252,12 +252,32 @@ python3 scripts/reconfigure.py --harness 0xYourHarnessAddress --prompt "New task
 # Change model
 python3 scripts/reconfigure.py --harness 0xYourHarnessAddress --model gpt-4o
 
-# Add funding
+# Add funding (reconfigure method — stops and restarts schedule)
 python3 scripts/reconfigure.py --harness 0xYourHarnessAddress --fund 0.05
 
 # Redeploy from scratch
 python3 scripts/deploy.py
 ```
+
+### Add Funding Without Redeploying
+
+Use `depositFor` on RitualWallet to add funds directly without stopping the schedule:
+
+```bash
+cast send 0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948 \
+  "depositFor(address,uint256)" \
+  0xYourHarnessAddress \
+  100000000 \
+  --value 0.5ether \
+  --rpc-url https://rpc.ritualfoundation.org \
+  --private-key $PRIVATE_KEY
+```
+
+- `0xYourHarnessAddress` — your harness contract address
+- `100000000` — lock duration in blocks
+- `--value 0.5ether` — amount of RITUAL to deposit
+
+This keeps your agent running while adding more funds.
 
 ---
 
