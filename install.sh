@@ -359,32 +359,33 @@ step_install_deps() {
     echo -ne "  ${DIM}  Installing web3...${RESET}\r"
     pip install web3 2>/dev/null && echo -e "  ${DIM}  Installing web3...${RESET}    ${GREEN}${CHECK}${RESET} web3"
 
+    # eciespy needs Rust — install first to avoid failures
+    if ! command -v rustc &>/dev/null && ! command -v cargo &>/dev/null; then
+        info "Installing Rust compiler (needed for eciespy)..."
+        case "$DISTRO" in
+            macos) brew install rust 2>/dev/null ;;
+            *)
+                curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs 2>/dev/null | sh -s -- -y 2>/dev/null
+                export PATH="$HOME/.cargo/bin:$PATH"
+                ;;
+        esac
+        if command -v rustc &>/dev/null || [ -f "$HOME/.cargo/bin/rustc" ]; then
+            success "Rust installed"
+            export PATH="$HOME/.cargo/bin:$PATH"
+        fi
+    fi
+
     echo -ne "  ${DIM}  Installing eciespy...${RESET}\r"
-    if pip install eciespy --only-binary :all: 2>/dev/null; then
+    if pip install eciespy 2>/dev/null; then
         echo -e "  ${DIM}  Installing eciespy...${RESET}  ${GREEN}${CHECK}${RESET} eciespy"
     else
-        # Try building from source
-        echo -e "  ${DIM}  Installing eciespy...${RESET}  ${YELLOW}${WARN}${RESET} no prebuilt wheel, building..."
-        if pip install eciespy 2>/dev/null; then
-            echo -e "  ${DIM}  Building eciespy...${RESET}     ${GREEN}${CHECK}${RESET} eciespy"
-        else
-            # Install Rust and retry
-            warn "eciespy needs Rust compiler — installing automatically..."
-            if [ "$DISTRO" = "macos" ]; then
-                brew install rust 2>/dev/null || true
-            else
-                curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y 2>/dev/null
-                export PATH="$HOME/.cargo/bin:$PATH"
-            fi
-            if pip install eciespy 2>/dev/null; then
-                echo -e "  ${DIM}  Building eciespy (with Rust)...${RESET} ${GREEN}${CHECK}${RESET} eciespy"
-            else
-                echo ""
-                error "Could not install eciespy even with Rust."
-                info "Try manually: ${CYAN}pip install eciespy${RESET}"
-                exit 1
-            fi
-        fi
+        echo -e "  ${DIM}  Installing eciespy...${RESET}  ${YELLOW}${WARN}${RESET} retrying..."
+        export PATH="$HOME/.cargo/bin:$PATH"
+        pip install eciespy 2>/dev/null && echo -e "  ${DIM}  Installing eciespy...${RESET}  ${GREEN}${CHECK}${RESET} eciespy" || {
+            error "Could not install eciespy"
+            info "Try: ${CYAN}source ~/.cargo/bin/env && pip install eciespy${RESET}"
+            exit 1
+        }
     fi
 
     echo -ne "  ${DIM}  Installing eth-abi...${RESET}\r"
