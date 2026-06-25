@@ -148,6 +148,9 @@ banner() {
     ║                                                          ║
     ║  Factory Harness  •  TEE Execution  •  Async Callbacks  ║
     ║                                                          ║
+    ║              Created by @frianowzki                      ║
+    ║           github.com/frianowzki                          ║
+    ║                                                          ║
     ╚══════════════════════════════════════════════════════════╝
 EOF
     echo -e "${RESET}"
@@ -944,6 +947,9 @@ step_review() {
     ║           ◆  SOVEREIGN AGENT DEPLOYED!  ◆               ║
     ║                                                          ║
     ║     Your agent is now live on Ritual Chain 1979.         ║
+    ║                                                          ║
+    ║              Created by @frianowzki                      ║
+    ║           github.com/frianowzki                          ║
     ║                                                          ║
     ╚══════════════════════════════════════════════════════════╝
 EOF
