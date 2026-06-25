@@ -62,6 +62,8 @@ That's it. The installer will:
 
 ### Getting a HuggingFace Token
 
+> **Important:** You need a token with **WRITE** access. Read-only tokens will not work.
+
 1. Go to [huggingface.co](https://huggingface.co) and create a free account
 2. Go to **Settings > Access Tokens** → [Create a token](https://huggingface.co/settings/tokens)
 3. Click **New token** → select **Write** access → copy the token (starts with `hf_`)

@@ -504,7 +504,7 @@ function Step-HuggingFace {
     Subbox "Setup Guide"
     Write-Host "  ${DIM}$([char]0x2551)${RESET}  ${BOLD}1.${RESET} Go to ${CYAN}https://huggingface.co${RESET} and sign up (free)"
     Write-Host "  ${DIM}$([char]0x2551)${RESET}  ${BOLD}2.${RESET} Go to ${CYAN}Settings > Access Tokens${RESET}"
-    Write-Host "  ${DIM}$([char]0x2551)${RESET}  ${BOLD}3.${RESET} Click ${WHITE}New token${RESET} -> select ${WHITE}Write${RESET} access"
+    Write-Host "  ${DIM}$([char]0x2551)${RESET}  ${BOLD}3.${RESET} Click ${WHITE}New token${RESET} -> select ${RED}Write${RESET} access ${RED}(REQUIRED)${RESET}"
     Write-Host "  ${DIM}$([char]0x2551)${RESET}  ${BOLD}4.${RESET} Copy the token (starts with ${WHITE}hf_${RESET})"
     Write-Host "  ${DIM}$([char]0x2551)${RESET}  ${BOLD}5.${RESET} Go to ${CYAN}New Dataset${RESET} -> create one (e.g., ${WHITE}yourname/agent-data${RESET})"
     Write-Host "  ${DIM}$([char]0x255A)$([string]::new([char]0x2550, 56))$([char]0x255D)${RESET}"

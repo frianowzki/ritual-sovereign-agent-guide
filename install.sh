@@ -596,7 +596,7 @@ step_huggingface() {
     subbox "Setup Guide"
     echo -e "  ${DIM}${BOX_V}${RESET}  ${BOLD}1.${RESET} Go to ${CYAN}https://huggingface.co${RESET} and sign up (free)"
     echo -e "  ${DIM}${BOX_V}${RESET}  ${BOLD}2.${RESET} Go to ${CYAN}Settings > Access Tokens${RESET}"
-    echo -e "  ${DIM}${BOX_V}${RESET}  ${BOLD}3.${RESET} Click ${WHITE}New token${RESET} → select ${WHITE}Write${RESET} access"
+    echo -e "  ${DIM}${BOX_V}${RESET}  ${BOLD}3.${RESET} Click ${WHITE}New token${RESET} -> select ${RED}Write${RESET} access ${RED}(REQUIRED)${RESET}"
     echo -e "  ${DIM}${BOX_V}${RESET}  ${BOLD}4.${RESET} Copy the token (starts with ${WHITE}hf_${RESET})"
     echo -e "  ${DIM}${BOX_V}${RESET}  ${BOLD}5.${RESET} Go to ${CYAN}New Dataset${RESET} → create one (e.g., ${WHITE}yourname/agent-data${RESET})"
     echo -e "  ${DIM}${BOX_BL}$(printf '%.0s${BOX_H}' {1..56})${BOX_BR}${RESET}"
