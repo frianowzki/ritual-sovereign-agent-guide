@@ -32,7 +32,7 @@ Harness ◀──onSovereignAgentResult── Executor
 
 <br/>
 
-[Quick Start](#quick-start) · [Platform Setup](#platform-setup) · [Environment](#environment-configuration) · [Deploy](#deployment) · [Custom Prompts](#custom-prompts) · [Monitoring](#monitoring) · [Troubleshooting](#troubleshooting)
+[Quick Start](#quick-start) · [What It Does](#what-it-does) · [Installer Walkthrough](#installer-walkthrough) · [Manual Setup](#manual-setup) · [Deploy](#deployment) · [Custom Prompts](#custom-prompts) · [Monitoring](#monitoring--management) · [Troubleshooting](#troubleshooting)
 
 </div>
 
@@ -40,20 +40,25 @@ Harness ◀──onSovereignAgentResult── Executor
 
 ## Table of Contents
 
-- [What You'll Build](#what-youll-build)
 - [Quick Start](#quick-start)
-- [Platform Setup](#platform-setup)
-  - [Linux](#linux)
-  - [macOS](#macos)
-  - [Windows](#windows)
-- [Environment Configuration](#environment-configuration)
-  - [LLM Providers](#llm-providers)
-  - [HuggingFace Setup](#huggingface-setup)
-  - [Full Variable Reference](#full-variable-reference)
+- [What You'll Build](#what-youll-build)
+- [Prerequisites](#prerequisites)
+- [Installer Walkthrough](#installer-walkthrough)
+  - [Step 1: Launch Installer](#step-1-launch-installer)
+  - [Step 2: System Check](#step-2-system-check)
+  - [Step 3: Install Dependencies](#step-3-install-dependencies)
+  - [Step 4: Blockchain Setup](#step-4-blockchain-setup)
+  - [Step 5: LLM Provider](#step-5-llm-provider)
+  - [Step 6: HuggingFace](#step-6-huggingface)
+  - [Step 7: Agent Prompt](#step-7-agent-prompt)
+  - [Step 8: Deployment Config](#step-8-deployment-config)
+  - [Step 9: Review & Deploy](#step-9-review--deploy)
+- [Manual Setup](#manual-setup)
+  - [Platform-Specific Instructions](#platform-specific-instructions)
+  - [Environment Configuration](#environment-configuration)
 - [Deployment](#deployment)
-  - [Step 1: Deploy Harness](#step-1-deploy-harness)
-  - [Step 2: Verify on Explorer](#step-2-verify-on-explorer)
-  - [Step 3: Monitor Agent](#step-3-monitor-agent)
+  - [Deploy Script](#deploy-script)
+  - [Verify on Explorer](#verify-on-explorer)
 - [Custom Prompts](#custom-prompts)
 - [Reconfiguration](#reconfiguration)
 - [Monitoring & Management](#monitoring--management)
@@ -62,6 +67,32 @@ Harness ◀──onSovereignAgentResult── Executor
 - [Troubleshooting](#troubleshooting)
 - [File Structure](#file-structure)
 - [References](#references)
+
+---
+
+## Quick Start
+
+**One command — the interactive installer does everything:**
+
+```bash
+git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
+cd ritual-sovereign-agent-guide
+python3 install.py
+```
+
+The installer guides you through:
+1. System check (Python, pip, git)
+2. Dependency installation (web3, eciespy, eth-abi)
+3. Private key input + validation
+4. LLM provider selection (OpenRouter / OpenAI / Anthropic / Gemini)
+5. API key input + model selection
+6. HuggingFace token + dataset setup
+7. Agent prompt (choose template or write custom)
+8. Deployment config (frequency, funding, salt)
+9. Review summary
+10. One-click deploy
+
+No manual `.env` editing needed.
 
 ---
 
@@ -80,56 +111,275 @@ The agent appears on the [Ritual Explorer](https://explorer.ritualfoundation.org
 
 ---
 
-## Quick Start
+## Prerequisites
 
-**One command — interactive installer handles everything:**
-
-```bash
-git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
-cd ritual-sovereign-agent-guide
-python3 install.py
-```
-
-The installer will:
-- Check your system (Python, pip, git)
-- Install dependencies
-- Guide you through private key, LLM provider, API key, prompt, HuggingFace setup
-- Generate `.env` with all configuration
-- Deploy your sovereign agent
-
-**Or set up manually:**
-
-```bash
-# 1. Clone
-git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
-cd ritual-sovereign-agent-guide
-
-# 2. Install dependencies
-pip install web3 eciespy eth-abi
-
-# 3. Configure
-cp .env.example .env
-# Edit .env with your keys (see Environment Configuration below)
-
-# 4. Deploy
-python3 scripts/deploy.py
-```
-
-The deploy script handles prediction, deployment, ECIES encryption, calldata encoding, and scheduler configuration in one run.
+| Requirement | Notes |
+|-------------|-------|
+| **Python 3.10+** | [python.org](https://www.python.org/downloads/) |
+| **Git** | [git-scm.com](https://git-scm.com) |
+| **Ritual Chain wallet** | With ≥ 0.2 RITUAL (testnet) |
+| **LLM API key** | Any of: OpenRouter, OpenAI, Anthropic, or Gemini |
+| **HuggingFace account** | Free at [huggingface.co](https://huggingface.co) |
 
 ---
 
-## Platform Setup
+## Installer Walkthrough
 
-### Linux
+The `install.py` script is an interactive wizard that walks you through every step. Here's what to expect:
 
-**Ubuntu / Debian:**
+### Step 1: Launch Installer
+
 ```bash
-# Python 3.10+
+python3 install.py
+```
+
+```
+  ◆ ═══════════════════════════════════════════════════════ ◆
+  ║                                                       ║
+  ║        Ritual Sovereign Agent Installer v1.0.0        ║
+  ║                                                       ║
+  ║   Deploy autonomous AI agents on Ritual Chain 1979    ║
+  ║                                                       ║
+  ◆ ═══════════════════════════════════════════════════════ ◆
+```
+
+### Step 2: System Check
+
+The installer verifies your environment:
+
+```
+  ── System Check ──────────────────────────────────────────
+
+  ℹ  OS: Linux-6.8.0-x86_64-with-glibc2.39
+  ✔  Python 3.12.3
+  ✔  Git: git version 2.43.0
+  ✔  pip: 24.0
+```
+
+- **Linux**: Ubuntu, Fedora, Arch — all supported
+- **macOS**: Intel + Apple Silicon (M1/M2/M3)
+- **Windows**: Native PowerShell or WSL
+
+### Step 3: Install Dependencies
+
+Auto-installs required Python packages:
+
+```
+  ── Dependencies ──────────────────────────────────────────
+
+  ℹ  Installing: web3, eciespy, eth-abi
+  ✔  web3 already installed
+  ✔  eciespy already installed
+  ✔  eth-abi already installed
+```
+
+> **macOS users**: If `eciespy` fails, the installer will suggest `brew install rust`.
+
+### Step 4: Blockchain Setup
+
+Enter your wallet private key:
+
+```
+  ── Blockchain Configuration ──────────────────────────────
+
+  ℹ  Chain: Ritual Chain (ID 1979)
+  ℹ  RPC: https://rpc.ritualfoundation.org
+  ℹ  Explorer: https://explorer.ritualfoundation.org
+
+  ?  Enter your private key (0x-prefixed) [hidden]: ****
+  ✔  Wallet: 0x63C5341454f66a32553ce598e06861e11095d39c
+```
+
+The key is masked during input and auto-validates format.
+
+### Step 5: LLM Provider
+
+Choose your AI model provider:
+
+```
+  ── LLM Provider ──────────────────────────────────────────
+
+  ?  Select your LLM provider:
+  ▶ 1. OpenRouter — Cheapest, 100+ models, recommended
+    2. OpenAI — GPT-4o, GPT-4o-mini
+    3. Anthropic — Claude Sonnet 4.5, Claude Haiku 4.5
+    4. Google — Gemini 2.5 Flash/Pro, free tier available
+
+  ?  Select [1-4] [1]: 1
+  ✔  Selected: OpenRouter
+```
+
+Then enter your API key and select a model:
+
+```
+  ℹ  Get your key at: https://openrouter.ai/keys
+
+  ?  Enter your OPENROUTER_API_KEY [hidden]: ****
+  ✔  API key saved
+
+  ?  Select a model:
+  ▶ 1. Gemini 2.5 Flash — Fast, cheap, good quality
+    2. Gemini 2.5 Pro — Best quality, more expensive
+    3. Claude Sonnet 4.5 (via OR) — Best reasoning
+    4. GPT-4o Mini (via OR) — Fast, cheap
+    5. Llama 4 Maverick — Open source, free on OR
+    6. DeepSeek V3 — Free, good quality
+
+  ?  Select [1-6] [1]: 1
+  ✔  Selected: Gemini 2.5 Flash
+```
+
+### Step 6: HuggingFace
+
+Set up conversation history storage:
+
+```
+  ── HuggingFace (Conversation History) ────────────────────
+
+  ℹ  HuggingFace stores your agent's conversation history and artifacts.
+  ℹ  Create token at: https://huggingface.co/settings/tokens
+  ℹ  Create dataset at: https://huggingface.co/new-dataset
+
+  ?  HuggingFace token (hf_...) [hidden]: ****
+  ✔  Token saved
+
+  ℹ  Dataset must be in format: username/repo-name
+  ℹ  Example: myname/sovereign-agent-data
+
+  ?  HuggingFace dataset ID: myname/agent-data
+  ✔  Dataset: myname/agent-data
+```
+
+### Step 7: Agent Prompt
+
+Choose what your agent does every time it wakes up:
+
+```
+  ── Agent Prompt ──────────────────────────────────────────
+
+  ℹ  This is what your agent will do every time it wakes up.
+  ℹ  You can always change it later with reconfigure.py.
+
+  ?  Select a prompt template:
+  ▶ 1. Default Analytics — DeFi analytics + market summary
+    2. Market Monitor — Price tracking + trading signals
+    3. Research Agent — Web research + news summarization
+    4. Write Your Own — Enter a custom prompt
+
+  ?  Select [1-4] [1]: 1
+```
+
+If you choose **Write Your Own**, you can type/paste your prompt directly:
+
+```
+  ℹ  Enter your prompt (press Enter twice to finish):
+  > You are a DeFi monitoring agent...
+  > Check RITUAL token price and analyze recent transactions...
+  > 
+  >
+```
+
+### Step 8: Deployment Config
+
+Fine-tune your agent's behavior:
+
+```
+  ── Deployment Configuration ──────────────────────────────
+
+  ?  Unique salt (for deterministic address) [my-sovereign-agent]: 
+  ✔  Using default
+
+  ?  Agent runtime:
+  ▶ 1. Crush — Default runtime — recommended
+    2. ZeroClaw — Alternative runtime
+
+  ?  Select [1-2] [1]: 1
+  ✔  Selected: Crush
+
+  ?  Execution frequency:
+  ▶ 1. ~12 min — Frequent — higher cost, more data
+    2. ~29 min — Balanced — good for monitoring
+    3. ~58 min — Hourly — lower cost
+    4. ~2.9 hr — Every few hours — daily summary
+    5. ~8.4 hr — Twice daily — low cost
+
+  ?  Select [1-5] [2]: 2
+  ✔  Selected: ~29 min
+
+  ?  Calls per rolling window [5]: 5
+
+  ℹ  RITUAL to deposit into your harness RitualWallet
+  ℹ  This pays for on-chain gas (~0.002-0.005 per heartbeat)
+
+  ?  Fund amount (RITUAL) [0.1]: 0.1
+
+  ℹ  At 5000 blocks/call with 0.1 RITUAL:
+  ✔  ~33 heartbeats
+  ✔  ~16 days of operation
+```
+
+### Step 9: Review & Deploy
+
+Review everything before deploying:
+
+```
+  ── Review Configuration ──────────────────────────────────
+
+  Configuration Summary
+  ──────────────────────────────────────────────────────────
+  Wallet:          0x63C5...d39c
+  Chain:           Ritual Chain (ID 1979)
+
+  LLM Provider:    openrouter
+  API Key:         OPENROUTER_API_KEY (sk-or-v1-...)
+  Model:           google/gemini-2.5-flash
+
+  HuggingFace:     myname/agent-data
+  HF Token:        hf_abc12...
+
+  Salt:            my-sovereign-agent
+  CLI Type:        5
+  Frequency:       every 5000 blocks (~29.2 min)
+  Window Calls:    5
+  Fund Amount:     0.1 RITUAL
+
+  Est. Runtime:    ~16 days
+  ──────────────────────────────────────────────────────────
+
+  ?  Deploy now? [Y/n]: Y
+```
+
+After deployment, you'll see:
+
+```
+  ◆ ═══════════════════════════════════════════════════════ ◆
+  ║                                                       ║
+  ║              Sovereign Agent Deployed!                ║
+  ║                                                       ║
+  ◆ ═══════════════════════════════════════════════════════ ◆
+
+  ℹ  Useful commands:
+
+  Deploy:     python3 scripts/deploy.py
+  Status:     python3 scripts/check-status.py --harness 0xYourAddr
+  Reconfig:   python3 scripts/reconfigure.py --harness 0xYourAddr --prompt "New task"
+  Explorer:   https://explorer.ritualfoundation.org/agents?kind=sovereign
+
+  ℹ  Docs: https://github.com/frianowzki/ritual-sovereign-agent-guide
+```
+
+---
+
+## Manual Setup
+
+If you prefer to set up manually (or the installer doesn't work on your system):
+
+### Platform-Specific Instructions
+
+**Linux (Ubuntu / Debian):**
+```bash
 sudo apt update
 sudo apt install -y python3 python3-pip python3-venv git
-
-# Clone and setup
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
 cd ritual-sovereign-agent-guide
 python3 -m venv venv
@@ -137,7 +387,7 @@ source venv/bin/activate
 pip install web3 eciespy eth-abi
 ```
 
-**Fedora / RHEL:**
+**Linux (Fedora / RHEL):**
 ```bash
 sudo dnf install -y python3 python3-pip git
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
@@ -147,7 +397,7 @@ source venv/bin/activate
 pip install web3 eciespy eth-abi
 ```
 
-**Arch Linux:**
+**Linux (Arch):**
 ```bash
 sudo pacman -S python python-pip git
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
@@ -157,18 +407,12 @@ source venv/bin/activate
 pip install web3 eciespy eth-abi
 ```
 
----
-
-### macOS
-
+**macOS:**
 ```bash
-# Install Homebrew (if not installed)
+# Install Homebrew if needed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install Python 3.10+ and Git
 brew install python git
-
-# Clone and setup
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
 cd ritual-sovereign-agent-guide
 python3 -m venv venv
@@ -176,55 +420,31 @@ source venv/bin/activate
 pip install web3 eciespy eth-abi
 ```
 
-> **Note:** macOS comes with Python 3.9 pre-installed. `brew install python` gives you 3.12+ which is required.
+> **Apple Silicon (M1/M2/M3):** If `eciespy` fails, run `brew install rust` first.
 
-**Apple Silicon (M1/M2/M3) users:**
-If you hit build errors with `eciespy`, install Rust first:
-```bash
-brew install rust
-pip install web3 eciespy eth-abi
-```
+**Windows (PowerShell):**
 
----
+1. Install [Python 3.10+](https://www.python.org/downloads/) (check "Add to PATH")
+2. Install [Git](https://git-scm.com/download/win)
+3. Open PowerShell:
 
-### Windows
-
-**Option A — Python directly (recommended):**
-
-1. **Install Python 3.10+** from [python.org](https://www.python.org/downloads/)
-   - ✅ Check **"Add Python to PATH"** during installation
-   - ✅ Check **"Install pip"**
-
-2. **Install Git** from [git-scm.com](https://git-scm.com/download/win)
-   - Use default settings during installation
-
-3. **Open PowerShell** and run:
 ```powershell
-# Clone
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
 cd ritual-sovereign-agent-guide
-
-# Create virtual environment
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-
-# Install dependencies
 pip install web3 eciespy eth-abi
 ```
 
-> **If `Activate.ps1` is blocked**, run this first:
-> ```powershell
-> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-> ```
+> If `Activate.ps1` is blocked: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
-**Option B — WSL (Windows Subsystem for Linux):**
-
+**Windows (WSL):**
 ```powershell
-# In PowerShell (as Administrator)
+# In PowerShell (Admin)
 wsl --install
-# Restart computer, then open "Ubuntu" from Start menu
+# Restart, open Ubuntu from Start menu
 
-# Inside WSL Ubuntu
+# Inside WSL
 sudo apt update && sudo apt install -y python3 python3-pip git
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
 cd ritual-sovereign-agent-guide
@@ -233,17 +453,11 @@ source venv/bin/activate
 pip install web3 eciespy eth-abi
 ```
 
-> **Recommendation:** Use WSL if you're comfortable with it — the Linux toolchain is more reliable for Web3 development.
-
-**Windows-specific notes:**
-- Use `python` instead of `python3` in PowerShell
-- Use `.\venv\Scripts\Activate.ps1` instead of `source venv/bin/activate`
-- Use backslashes `\` in paths, or forward slashes `/` in Python scripts
-- If `eciespy` fails to install, try: `pip install eciespy --only-binary :all:`
+> **Tip:** Use `python` (not `python3`) on Windows PowerShell. Use WSL if you can — it's more reliable for Web3 tooling.
 
 ---
 
-## Environment Configuration
+### Environment Configuration
 
 Copy the example and fill in your values:
 
@@ -251,64 +465,21 @@ Copy the example and fill in your values:
 cp .env.example .env
 ```
 
-### LLM Providers
+**LLM Providers** — choose one:
 
-Choose **one** provider and set the corresponding API key.
+| Provider | Env Variable | Get Key |
+|----------|-------------|---------|
+| **OpenRouter** (recommended) | `OPENROUTER_API_KEY=sk-or-v1-...` | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| **OpenAI** | `OPENAI_API_KEY=sk-...` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| **Anthropic** | `ANTHROPIC_API_KEY=sk-ant-...` | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) |
+| **Gemini** | `GEMINI_API_KEY=...` | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
 
-**◆ OpenRouter** (recommended — cheapest, access to 100+ models)
-```env
-LLM_PROVIDER=openrouter
-OPENROUTER_API_KEY=sk-or-v1-your-key-here
-MODEL=google/gemini-2.5-flash
-```
-Get key → [openrouter.ai/keys](https://openrouter.ai/keys)
+**HuggingFace:**
+1. Create token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) (write access)
+2. Create dataset at [huggingface.co/new-dataset](https://huggingface.co/new-dataset)
+3. Set `HF_TOKEN=hf_...` and `HF_REPO_ID=username/repo-name`
 
-**◆ OpenAI**
-```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-your-key-here
-MODEL=gpt-4o-mini
-```
-Get key → [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-
-**◆ Anthropic**
-```env
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-MODEL=claude-sonnet-4-5-20250929
-```
-Get key → [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
-
-**◆ Google Gemini**
-```env
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your-key-here
-MODEL=gemini-2.5-flash
-```
-Get key → [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-
----
-
-### HuggingFace Setup
-
-HuggingFace stores your agent's conversation history and artifacts.
-
-1. Create account at [huggingface.co](https://huggingface.co)
-2. Go to **Settings > Access Tokens** → [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
-3. Create a token with **write** access
-4. Go to **New Dataset** → [huggingface.co/new-dataset](https://huggingface.co/new-dataset)
-5. Create a dataset (e.g., `yourname/agent-data`)
-6. Set in `.env`:
-   ```env
-   HF_TOKEN=hf_your_token_here
-   HF_REPO_ID=yourname/agent-data
-   ```
-
-> **Important:** `HF_REPO_ID` must be in `username/repo-name` format. Not a URL, not a token.
-
----
-
-### Full Variable Reference
+**Full variable reference:**
 
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
@@ -331,7 +502,7 @@ HuggingFace stores your agent's conversation history and artifacts.
 
 ## Deployment
 
-### Step 1: Deploy Harness
+### Deploy Script
 
 ```bash
 python3 scripts/deploy.py
@@ -383,31 +554,25 @@ Model: google/gemini-2.5-flash
 ════════════════════════════════════════════════════════════
 ```
 
-### Step 2: Verify on Explorer
+### Verify on Explorer
 
-1. Open your harness on the explorer:
+1. Open your harness:
    ```
    https://explorer.ritualfoundation.org/address/0xYOUR_HARNESS
    ```
 
-2. Check the **Agents** page:
+2. Check the Agents page:
    ```
    https://explorer.ritualfoundation.org/agents?kind=sovereign
    ```
 
 3. Your agent should show as **Sovereign + Monitored** ✅
 
-### Step 3: Monitor Agent
-
-```bash
-python3 scripts/check-status.py --harness 0xYourHarnessAddress
-```
-
 ---
 
 ## Custom Prompts
 
-Your agent's prompt defines what it does every time it wakes up. Edit `templates/default-prompt.txt` or set `AGENT_PROMPT` in `.env`.
+Your agent's prompt defines what it does every time it wakes up.
 
 ### Writing Effective Prompts
 
@@ -436,10 +601,9 @@ Ready-made prompts in `templates/`:
 | `market-monitor.txt` | Price tracking + alerts | Traders |
 | `research-agent.txt` | Web research + summarization | Researchers |
 
-### Prompt from File
+### Set via .env
 
 ```env
-# In .env
 AGENT_PROMPT=You are a sovereign agent. Your task is to...
 ```
 
@@ -481,7 +645,7 @@ python3 scripts/reconfigure.py --harness 0xYourHarness \
 python3 scripts/check-status.py --harness 0xYourHarnessAddress
 ```
 
-### Cast Commands (with [Foundry](https://book.getfoundry.sh/getting-started/installation))
+### Cast Commands (requires [Foundry](https://book.getfoundry.sh/getting-started/installation))
 
 ```bash
 # Is it configured?
@@ -572,7 +736,7 @@ Window 2: [call1] [call2] [call3] [call4] [call5]
 <summary><strong>◆ <code>DeploymentFailed()</code> (0x30116425)</strong></summary>
 
 **Cause:** `deployHarness` gas limit too low (< 3M).
-**Fix:** The script sets 3M by default. If you're calling manually:
+**Fix:** The script sets 3M by default. If calling manually:
 ```python
 send_tx(w3, deploy_data, FACTORY, gas_limit=3_000_000)
 ```
