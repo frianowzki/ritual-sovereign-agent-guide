@@ -18,26 +18,36 @@ Deploy a **production-grade Sovereign Agent** on Ritual Chain using the factory-
 
 ## ⚡ Quick Install
 
-**Linux & macOS — two commands:**
+**Universal (Linux, macOS, Windows WSL) — one command:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh -o install.sh && bash install.sh
+curl -LsSf https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/auto-install.sh | bash
 ```
 
-**Windows PowerShell — one command:**
+> Auto-detects your OS, installs all dependencies (Python, Git, Rust, uv), clones repo, sets up environment. No questions asked.
 
-```powershell
-irm https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.ps1 | iex
+**After install, edit your credentials:**
+
+```bash
+nano ~/ritual-sovereign-agent-guide/.env
 ```
 
-That's it. The installer will:
-- Install Python, pip, and git if missing
-- Clone the project
-- Install all dependencies
-- Walk you through configuration step by step
-- Deploy your agent
+**Then deploy:**
 
-> **No coding knowledge required.** The installer asks simple questions and handles everything automatically.
+```bash
+cd ~/ritual-sovereign-agent-guide
+source venv/bin/activate
+python3 scripts/deploy.py
+```
+
+---
+
+**Interactive installers (with step-by-step guidance):**
+
+| Platform | Command |
+|----------|---------|
+| Linux & macOS | `curl -sSL https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.sh -o install.sh && bash install.sh` |
+| Windows PowerShell | `irm https://raw.githubusercontent.com/frianowzki/ritual-sovereign-agent-guide/master/install.ps1 \| iex` |
 
 ---
 
