@@ -267,14 +267,14 @@ function Step-InstallDeps {
             }
             3 {
                 Remove-Item -Recurse -Force $script:InstallDir
-                git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git $script:InstallDir 2>&1 | Out-Null
+                git clone --quiet https://github.com/frianowzki/ritual-sovereign-agent-guide.git $script:InstallDir 2>&1 | Out-Null
                 Set-Location $script:InstallDir
                 Success "Fresh clone"
             }
         }
     } else {
         Info "Downloading project..."
-        git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git $script:InstallDir 2>&1 | Out-Null
+        git clone --quiet https://github.com/frianowzki/ritual-sovereign-agent-guide.git $script:InstallDir 2>&1 | Out-Null
         Set-Location $script:InstallDir
         Success "Downloaded to ${WHITE}$($script:InstallDir)${RESET}"
     }
