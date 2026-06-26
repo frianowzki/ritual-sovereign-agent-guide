@@ -198,6 +198,15 @@ function Step-System {
         $script:NeedPip = $true
     }
 
+    # uv (fast Python package manager)
+    if (Test-Command "uv") {
+        $uvVer = (uv --version) -replace 'uv ', ''
+        Success "uv ${DIM}$uvVer${RESET}"
+    } else {
+        Warn "uv not found — will install"
+        $script:NeedUv = $true
+    }
+
     Blank
     Progress 2 5 "System check complete"
 }
@@ -237,6 +246,33 @@ function Step-InstallDeps {
             Info "Check 'Add Python to PATH' during installation"
             $continue = Ask "Continue anyway? [y/N]" "N"
             if ($continue -ne "y" -and $continue -ne "Y") { exit 1 }
+        }
+    }
+
+    # Install Visual Studio Build Tools if needed (for eciespy)
+    Info "Checking for C++ build tools..."
+    $hasCompiler = Test-Path "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe"
+    if (-not $hasCompiler) {
+        Warn "C++ build tools not found (needed for eciespy)"
+        Info "If eciespy install fails, install Visual Studio Build Tools:"
+        Info "  ${CYAN}https://visualstudio.microsoft.com/visual-cpp-build-tools/${RESET}"
+    }
+
+    Blank
+
+    # Install uv (fast Python package manager)
+    if ($script:NeedUv) {
+        Info "Installing ${WHITE}uv${RESET} (fast Python package manager)..."
+        try {
+            irm https://astral.sh/uv/install.ps1 | iex
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            if (Test-Command "uv") {
+                Success "uv installed"
+            } else {
+                Warn "uv install failed, falling back to pip"
+            }
+        } catch {
+            Warn "uv install failed, falling back to pip"
         }
     }
 
@@ -289,28 +325,48 @@ function Step-InstallDeps {
     try {
         & $script:PythonCmd -m venv (Join-Path $script:InstallDir "venv") 2>&1 | Out-Null
         $venvActivate = Join-Path $script:InstallDir "venv\Scripts\Activate.ps1"
-        . $venvActivate
-        Success "Virtual environment created"
-        $script:VenvActive = $true
+        if (Test-Path $venvActivate) {
+            . $venvActivate
+            Success "Virtual environment created"
+            $script:VenvActive = $true
+        } else {
+            Warn "Venv activation script not found"
+            $script:VenvActive = $false
+        }
     } catch {
         Warn "Could not create venv, installing globally"
         $script:VenvActive = $false
     }
 
-    # Install packages
+    # Use uv if available, fallback to pip
+    if (Test-Command "uv") {
+        $script:PkgMgr = "uv pip"
+        Info "Using ${WHITE}uv${RESET} for faster installs"
+    } else {
+        $script:PkgMgr = "pip"
+        Info "Using ${WHITE}pip${RESET}"
+    }
+
+    # Install packages with proper error handling
     Write-Host "  ${DIM}  Installing web3...${RESET}" -NoNewline
-    pip install web3 2>&1 | Out-Null
-    Write-Host "`r  ${DIM}  Installing web3...${RESET}     ${GREEN}`u{2713}${RESET} web3"
+    try {
+        & $script:PythonCmd -m $script:PkgMgr.Replace("pip", "pip") install web3 2>&1 | Out-Null
+        Write-Host "`r  ${DIM}  Installing web3...${RESET}     ${GREEN}`u{2713}${RESET} web3"
+    } catch {
+        Write-Host "`r  ${DIM}  Installing web3...${RESET}     ${RED}`u{2717}${RESET} web3"
+        Error "Failed to install web3"
+        exit 1
+    }
 
     Write-Host "  ${DIM}  Installing eciespy...${RESET}" -NoNewline
     try {
-        pip install eciespy 2>&1 | Out-Null
+        & $script:PythonCmd -m pip install eciespy 2>&1 | Out-Null
         Write-Host "`r  ${DIM}  Installing eciespy...${RESET}   ${GREEN}`u{2713}${RESET} eciespy"
     } catch {
         Write-Host ""
         Warn "eciespy install failed — trying alternative..."
         try {
-            pip install eciespy --no-build-isolation 2>&1 | Out-Null
+            & $script:PythonCmd -m pip install eciespy --no-build-isolation 2>&1 | Out-Null
             Write-Host "  ${DIM}  Installing eciespy...${RESET}   ${GREEN}`u{2713}${RESET} eciespy (alternative)"
         } catch {
             Error "Could not install eciespy"
@@ -322,8 +378,14 @@ function Step-InstallDeps {
     }
 
     Write-Host "  ${DIM}  Installing eth-abi...${RESET}" -NoNewline
-    pip install eth-abi 2>&1 | Out-Null
-    Write-Host "`r  ${DIM}  Installing eth-abi...${RESET}   ${GREEN}`u{2713}${RESET} eth-abi"
+    try {
+        & $script:PythonCmd -m pip install eth-abi 2>&1 | Out-Null
+        Write-Host "`r  ${DIM}  Installing eth-abi...${RESET}   ${GREEN}`u{2713}${RESET} eth-abi"
+    } catch {
+        Write-Host "`r  ${DIM}  Installing eth-abi...${RESET}   ${RED}`u{2717}${RESET} eth-abi"
+        Error "Failed to install eth-abi"
+        exit 1
+    }
 
     Blank
     Success "All Python dependencies installed"
@@ -765,6 +827,10 @@ FUND_AMOUNT=$($script:FundAmount)
 "@
 
     Set-Content -Path $envFile -Value $envContent -Encoding UTF8
+    if (-not (Test-Path $envFile)) {
+        Error "Failed to write .env file"
+        exit 1
+    }
     Success "Configuration saved to ${WHITE}$envFile${RESET}"
 
     Progress 5 5 "Configuration complete"
@@ -820,7 +886,11 @@ function Step-Review {
 
             if ($script:VenvActive) {
                 $venvActivate = Join-Path $script:InstallDir "venv\Scripts\Activate.ps1"
-                . $venvActivate 2>&1 | Out-Null
+                if (Test-Path $venvActivate) {
+                    . $venvActivate 2>&1 | Out-Null
+                } else {
+                    Warn "Venv activation script not found"
+                }
             }
 
             $deployScript = Join-Path $script:InstallDir "scripts\deploy.py"

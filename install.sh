@@ -235,6 +235,14 @@ step_system() {
         NEED_PIP=true
     fi
 
+    # uv (fast Python package manager)
+    if command -v uv &>/dev/null; then
+        success "uv ${DIM}$(uv --version | cut -d' ' -f2)${RESET}"
+    else
+        warn "uv not found — will install"
+        NEED_UV=true
+    fi
+
     # curl
     if command -v curl &>/dev/null; then
         success "curl available"
@@ -254,6 +262,16 @@ step_install_deps() {
     step "Install Dependencies"
     progress 3 5 "Installing dependencies"
 
+    # Update system packages first (for new users)
+    case "$DISTRO" in
+        ubuntu|debian)
+            info "Updating system packages..."
+            sudo apt update -qq 2>/dev/null
+            sudo apt upgrade -y -qq 2>/dev/null
+            success "System updated"
+            ;;
+    esac
+
     # Install missing system deps
     if [ "$NEED_GIT" = true ] || [ "$NEED_PYTHON" = true ] || [ "$NEED_PIP" = true ]; then
         info "Installing system dependencies..."
@@ -262,20 +280,23 @@ step_install_deps() {
         case "$DISTRO" in
             ubuntu|debian)
                 info "Using ${WHITE}apt${RESET} package manager"
-                sudo apt update -qq 2>/dev/null
                 [ "$NEED_GIT" = true ] && sudo apt install -y -qq git 2>/dev/null && success "Git installed"
-                [ "$NEED_PYTHON" = true ] && sudo apt install -y -qq python3 python3-venv 2>/dev/null && success "Python installed"
+                [ "$NEED_PYTHON" = true ] && sudo apt install -y -qq python3 python3-venv python3-dev 2>/dev/null && success "Python installed"
                 [ "$NEED_PIP" = true ] && sudo apt install -y -qq python3-pip 2>/dev/null && success "pip installed"
+                # Install build deps for native packages (eciespy, etc.)
+                sudo apt install -y -qq build-essential pkg-config libssl-dev unzip 2>/dev/null && success "Build tools installed"
                 ;;
             fedora|rhel|centos)
                 info "Using ${WHITE}dnf${RESET} package manager"
                 [ "$NEED_GIT" = true ] && sudo dnf install -y -q git 2>/dev/null && success "Git installed"
-                [ "$NEED_PYTHON" = true ] && sudo dnf install -y -q python3 python3-pip 2>/dev/null && success "Python installed"
+                [ "$NEED_PYTHON" = true ] && sudo dnf install -y -q python3 python3-pip python3-devel 2>/dev/null && success "Python installed"
+                sudo dnf install -y -q gcc openssl-devel pkg-config 2>/dev/null && success "Build tools installed"
                 ;;
             arch|manjaro)
                 info "Using ${WHITE}pacman${RESET} package manager"
                 [ "$NEED_GIT" = true ] && sudo pacman -S --noconfirm --quiet git 2>/dev/null && success "Git installed"
                 [ "$NEED_PYTHON" = true ] && sudo pacman -S --noconfirm --quiet python python-pip 2>/dev/null && success "Python installed"
+                sudo pacman -S --noconfirm --quiet base-devel openssl 2>/dev/null && success "Build tools installed"
                 ;;
             macos)
                 if command -v brew &>/dev/null; then
@@ -299,6 +320,18 @@ step_install_deps() {
         esac
     else
         success "All system dependencies already installed"
+    fi
+
+    # Install uv (fast Python package manager)
+    if [ "$NEED_UV" = true ] || ! command -v uv &>/dev/null; then
+        info "Installing ${WHITE}uv${RESET} (fast Python package manager)..."
+        curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh 2>/dev/null
+        export PATH="$HOME/.local/bin:$PATH"
+        if command -v uv &>/dev/null; then
+            success "uv ${DIM}$(uv --version | cut -d' ' -f2)${RESET}"
+        else
+            warn "uv install failed, falling back to pip"
+        fi
     fi
 
     blank
@@ -327,14 +360,14 @@ step_install_deps() {
                 ;;
             3)
                 rm -rf "$INSTALL_DIR"
-                git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git "$INSTALL_DIR" 2>/dev/null
+                git clone --quiet https://github.com/frianowzki/ritual-sovereign-agent-guide.git "$INSTALL_DIR"
                 cd "$INSTALL_DIR"
                 success "Fresh clone"
                 ;;
         esac
     else
         info "Downloading project..."
-        git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git "$INSTALL_DIR" 2>/dev/null
+        git clone --quiet https://github.com/frianowzki/ritual-sovereign-agent-guide.git "$INSTALL_DIR"
         cd "$INSTALL_DIR"
         success "Downloaded to ${WHITE}~/ritual-sovereign-agent-guide${RESET}"
     fi
@@ -346,7 +379,7 @@ step_install_deps() {
     blank
 
     # Try venv first
-    if python3 -m venv "$INSTALL_DIR/venv" 2>/dev/null; then
+    if python3 -m venv "$INSTALL_DIR/venv" 2>&1; then
         source "$INSTALL_DIR/venv/bin/activate"
         success "Virtual environment: ${WHITE}$INSTALL_DIR/venv${RESET}"
         VENV_ACTIVE=true
@@ -355,9 +388,24 @@ step_install_deps() {
         VENV_ACTIVE=false
     fi
 
-    # Install packages with progress
+    # Use uv if available, fallback to pip
+    if command -v uv &>/dev/null; then
+        PKG_MGR="uv pip"
+        info "Using ${WHITE}uv${RESET} for faster installs"
+    else
+        PKG_MGR="pip"
+        info "Using ${WHITE}pip${RESET}"
+    fi
+
+    # Install packages with proper error handling
     echo -ne "  ${DIM}  Installing web3...${RESET}\r"
-    pip install web3 2>/dev/null && echo -e "  ${DIM}  Installing web3...${RESET}    ${GREEN}${CHECK}${RESET} web3"
+    if $PKG_MGR install web3 2>&1; then
+        echo -e "  ${DIM}  Installing web3...${RESET}    ${GREEN}${CHECK}${RESET} web3"
+    else
+        echo -e "  ${DIM}  Installing web3...${RESET}    ${RED}${CROSS}${RESET} web3"
+        error "Failed to install web3"
+        exit 1
+    fi
 
     # eciespy needs Rust — install first to avoid failures
     if ! command -v rustc &>/dev/null && ! command -v cargo &>/dev/null; then
@@ -376,20 +424,28 @@ step_install_deps() {
     fi
 
     echo -ne "  ${DIM}  Installing eciespy...${RESET}\r"
-    if pip install eciespy 2>/dev/null; then
+    if $PKG_MGR install eciespy 2>&1; then
         echo -e "  ${DIM}  Installing eciespy...${RESET}  ${GREEN}${CHECK}${RESET} eciespy"
     else
         echo -e "  ${DIM}  Installing eciespy...${RESET}  ${YELLOW}${WARN}${RESET} retrying..."
         export PATH="$HOME/.cargo/bin:$PATH"
-        pip install eciespy 2>/dev/null && echo -e "  ${DIM}  Installing eciespy...${RESET}  ${GREEN}${CHECK}${RESET} eciespy" || {
+        if $PKG_MGR install eciespy 2>&1; then
+            echo -e "  ${DIM}  Installing eciespy...${RESET}  ${GREEN}${CHECK}${RESET} eciespy"
+        else
             error "Could not install eciespy"
             info "Try: ${CYAN}source ~/.cargo/bin/env && pip install eciespy${RESET}"
             exit 1
-        }
+        fi
     fi
 
     echo -ne "  ${DIM}  Installing eth-abi...${RESET}\r"
-    pip install eth-abi 2>/dev/null && echo -e "  ${DIM}  Installing eth-abi...${RESET}   ${GREEN}${CHECK}${RESET} eth-abi"
+    if $PKG_MGR install eth-abi 2>&1; then
+        echo -e "  ${DIM}  Installing eth-abi...${RESET}   ${GREEN}${CHECK}${RESET} eth-abi"
+    else
+        echo -e "  ${DIM}  Installing eth-abi...${RESET}   ${RED}${CROSS}${RESET} eth-abi"
+        error "Failed to install eth-abi"
+        exit 1
+    fi
 
     blank
     success "All Python dependencies installed"
