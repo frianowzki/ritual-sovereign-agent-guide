@@ -14,7 +14,8 @@
 #    nano ~/ritual-sovereign-agent-guide/.env
 # ═══════════════════════════════════════════════════════════════
 
-set -e
+# Don't use set -e — we handle errors manually
+set -u
 
 # ── Colors ──────────────────────────────────────────────────
 RED='\033[0;91m'
