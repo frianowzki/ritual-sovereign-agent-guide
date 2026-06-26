@@ -171,24 +171,68 @@ setup_python() {
 
     cd "$INSTALL_DIR"
 
+    # Remove broken venv if exists
+    if [ -d "venv" ] && [ ! -f "venv/bin/activate" ] && [ ! -f "venv/Scripts/activate" ]; then
+        warn "Removing broken venv..."
+        rm -rf venv
+    fi
+
     # Create venv
     info "Creating virtual environment..."
-    python3 -m venv venv 2>/dev/null || python -m venv venv 2>/dev/null
-    source venv/bin/activate 2>/dev/null || source venv/Scripts/activate 2>/dev/null
-    success "Virtual environment ready"
+    VENV_OK=false
+
+    # Try python3 -m venv
+    if python3 -m venv venv 2>/dev/null; then
+        VENV_OK=true
+    elif python -m venv venv 2>/dev/null; then
+        VENV_OK=true
+    # Fallback: uv venv
+    elif command -v uv &>/dev/null; then
+        info "python3 venv failed, trying uv venv..."
+        if uv venv venv 2>/dev/null; then
+            VENV_OK=true
+        fi
+    fi
+
+    # Activate venv
+    if $VENV_OK; then
+        if [ -f "venv/bin/activate" ]; then
+            source venv/bin/activate
+        elif [ -f "venv/Scripts/activate" ]; then
+            source venv/Scripts/activate
+        fi
+        success "Virtual environment ready"
+    else
+        warn "Could not create venv, using system Python"
+    fi
 
     # Install packages
     info "Installing Python packages..."
 
     if command -v uv &>/dev/null; then
-        info "Using uv for fast installs..."
-        uv pip install web3 eciespy eth-abi 2>/dev/null
+        if $VENV_OK; then
+            info "Using uv (venv mode)..."
+            uv pip install web3 eciespy eth-abi 2>/dev/null
+        else
+            info "Using uv (system mode)..."
+            uv pip install --system web3 eciespy eth-abi 2>/dev/null
+        fi
     else
-        info "Using pip..."
-        pip install web3 eciespy eth-abi 2>/dev/null
+        if $VENV_OK; then
+            info "Using pip..."
+            pip install web3 eciespy eth-abi 2>/dev/null
+        else
+            info "Using pip --user..."
+            pip install --user web3 eciespy eth-abi 2>/dev/null
+        fi
     fi
 
-    success "Python packages installed"
+    # Verify installation
+    if python3 -c "import web3; print('web3', web3.__version__)" 2>/dev/null; then
+        success "Python packages installed"
+    else
+        error "web3 not found — run manually: pip install web3 eciespy eth-abi"
+    fi
 }
 
 # ── Check Rust (needed for eciespy) ─────────────────────────
