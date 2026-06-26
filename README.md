@@ -50,7 +50,13 @@ Features:
 | **Anthropic** | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) | `claude-sonnet-4-5-20250929` | ~$0.03/run |
 | **Gemini** | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | `gemini-2.5-flash` | Free tier |
 
-> **Note:** Ritual Native LLM (`zai-org/GLM-4.7-FP8`) runs on-chain via precompile — no API key needed.
+> **Note:** Ritual Native LLM runs on-chain via precompile — no API key needed. Set `LLM_PROVIDER=native` in your `.env`.
+>
+> Available native models:
+> - `zai-org/GLM-4.7-FP8` (default)
+> - `meta-llama/Llama-3.3-70B-Instruct`
+> - `Qwen/Qwen3-32B`
+> - `deepseek-ai/DeepSeek-R1`
 
 ### Getting a HuggingFace Token
 

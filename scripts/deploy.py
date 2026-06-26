@@ -72,7 +72,11 @@ def get_llm_creds():
     provider = os.environ.get("LLM_PROVIDER", "").lower()
     model = os.environ.get("MODEL", "")
     
-    if provider == "openrouter":
+    # Native LLM — no API key needed, runs via Ritual precompile
+    if provider == "native" or provider == "":
+        return {"HF_TOKEN": HF_TOKEN}, model or "zai-org/GLM-4.7-FP8"
+    
+    elif provider == "openrouter":
         key = os.environ.get("OPENROUTER_API_KEY", "")
         if not key:
             print("ERROR: OPENROUTER_API_KEY not set")
@@ -101,7 +105,7 @@ def get_llm_creds():
         return {"LLM_PROVIDER": "gemini", "GEMINI_API_KEY": key, "HF_TOKEN": HF_TOKEN}, model or "gemini-2.5-flash"
     
     else:
-        print(f"ERROR: Unknown LLM_PROVIDER '{provider}'. Options: openrouter, openai, anthropic, gemini")
+        print(f"ERROR: Unknown LLM_PROVIDER '{provider}'. Options: native, openrouter, openai, anthropic, gemini")
         sys.exit(1)
 
 
