@@ -163,6 +163,44 @@
           </div>
         </div>
 
+        <!-- Step 2.5: Executor Selection -->
+        <div class="glass rounded-xl p-2 md:p-3">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="step-badge step-active">⚡</div>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">TEE Executor</h3>
+            <button onclick="refreshExecutors()" class="btn-outline rounded-lg px-2 py-0.5 text-xs ml-auto" id="executor-refresh-btn">Refresh</button>
+          </div>
+          <div class="space-y-2">
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">Select Executor</label>
+              <select id="d-executor" class="w-full rounded-lg px-3 py-2 text-sm mono">
+                <option value="">Loading executors...</option>
+              </select>
+              <p id="executor-count" class="text-xs text-slate-500 mt-1"></p>
+            </div>
+            <div id="executor-details" class="hidden rounded-lg px-3 py-2 border" style="background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.2)">
+              <div class="space-y-1 text-xs">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">TEE Address</span>
+                  <span id="exec-addr" class="mono text-slate-300"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Payment Address</span>
+                  <span id="exec-payment" class="mono text-slate-300"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Endpoint</span>
+                  <span id="exec-endpoint" class="text-slate-300 truncate max-w-[200px]"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">TEE Type</span>
+                  <span id="exec-teetype" class="text-slate-300"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Step 3: Agent Config -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
@@ -860,6 +898,12 @@ async function deployAgent() {
 
     let fullCalldata;
     try {
+      // Get selected executor (if any)
+      const selectedExec = getSelectedExecutor();
+      if (selectedExec) {
+        log(termDiv, 'info', `Selected executor: ${selectedExec.address.slice(0,10)}...${selectedExec.address.slice(-8)}`);
+      }
+      
       const encodeResp = await fetch('/api/encode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -881,7 +925,8 @@ async function deployAgent() {
           maxFeeGwei: maxFeeGwei,
           priorityFeeGwei: priorityFeeGwei,
           cliType: 6,
-          sender: userAddress
+          sender: userAddress,
+          executorAddress: selectedExec ? selectedExec.address : null
         })
       });
 
@@ -1110,6 +1155,115 @@ async function checkStatusOnChain() {
     btn.innerHTML = 'Check Status';
   }
 }
+
+// ═══════════════════════════════════════════════════════════
+//  EXECUTOR MANAGEMENT — fetch from registry, dropdown, details
+// ═══════════════════════════════════════════════════════════
+let cachedExecutors = [];
+
+async function refreshExecutors() {
+  const sel = document.getElementById('d-executor');
+  const btn = document.getElementById('executor-refresh-btn');
+  const countEl = document.getElementById('executor-count');
+  const detailsDiv = document.getElementById('executor-details');
+  
+  sel.innerHTML = '<option value="">Loading...</option>';
+  btn.disabled = true;
+  btn.textContent = '...';
+  
+  try {
+    // Try API first
+    let executors = [];
+    try {
+      const resp = await fetch('/api/executors');
+      if (resp.ok) {
+        const data = await resp.json();
+        executors = data.executors || [];
+      }
+    } catch(e) {}
+    
+    // Fallback: fetch directly from chain
+    if (executors.length === 0) {
+      try {
+        const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+        const REGISTRY = '0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F';
+        const REGISTRY_ABI = ['function getServicesByCapability(uint8,bool) view returns (tuple(tuple(address paymentAddress,address teeAddress,uint8 teeType,bytes publicKey,string endpoint,bytes32 certPubKeyHash,uint8 capability) node,bool isValid,bytes32 workloadId)[])'];
+        const registry = new ethers.Contract(REGISTRY, REGISTRY_ABI, rpcProvider);
+        const services = await registry.getServicesByCapability(0, true);
+        for (const svc of services) {
+          if (svc.isValid) {
+            executors.push({
+              address: svc.node.teeAddress,
+              paymentAddress: svc.node.paymentAddress,
+              teeType: Number(svc.node.teeType),
+              endpoint: svc.node.endpoint,
+              capability: Number(svc.node.capability),
+            });
+          }
+        }
+      } catch(e) { console.warn('Chain fetch failed:', e.message); }
+    }
+    
+    cachedExecutors = executors;
+    sel.innerHTML = '';
+    
+    if (executors.length === 0) {
+      sel.innerHTML = '<option value="">No executors found</option>';
+      countEl.textContent = 'Registry returned 0 active executors.';
+      return;
+    }
+    
+    // Populate dropdown
+    executors.forEach((exec, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      const shortAddr = exec.address.slice(0, 8) + '...' + exec.address.slice(-6);
+      const endpoint = exec.endpoint ? ` (${exec.endpoint.slice(0, 30)})` : '';
+      opt.textContent = `${shortAddr}${endpoint}`;
+      sel.appendChild(opt);
+    });
+    
+    countEl.textContent = `${executors.length} active executor${executors.length > 1 ? 's' : ''} found`;
+    
+    // Show details for first executor
+    showExecutorDetails(0);
+    sel.addEventListener('change', () => showExecutorDetails(parseInt(sel.value)));
+    
+  } catch (err) {
+    sel.innerHTML = `<option value="">Error: ${err.message}</option>`;
+    countEl.textContent = 'Failed to load executors.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Refresh';
+  }
+}
+
+function showExecutorDetails(index) {
+  const detailsDiv = document.getElementById('executor-details');
+  const exec = cachedExecutors[index];
+  if (!exec) {
+    detailsDiv.classList.add('hidden');
+    return;
+  }
+  
+  detailsDiv.classList.remove('hidden');
+  document.getElementById('exec-addr').textContent = exec.address.slice(0, 10) + '...' + exec.address.slice(-8);
+  document.getElementById('exec-payment').textContent = exec.paymentAddress ? exec.paymentAddress.slice(0, 10) + '...' + exec.paymentAddress.slice(-8) : '—';
+  document.getElementById('exec-endpoint').textContent = exec.endpoint || '—';
+  document.getElementById('exec-teetype').textContent = exec.teeType === 0 ? 'SGX' : exec.teeType === 1 ? 'TDX' : `Type ${exec.teeType}`;
+}
+
+function getSelectedExecutor() {
+  const sel = document.getElementById('d-executor');
+  const index = parseInt(sel.value);
+  if (isNaN(index) || !cachedExecutors[index]) return null;
+  return cachedExecutors[index];
+}
+
+// Load executors on page load
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(refreshExecutors, 1000);
+});
 
 function randomizeSalt() {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -1357,8 +1511,37 @@ async function loadMyAgents() {
         try { lockUntil = await wallet.lockUntil(addr); } catch(e) {}
       }
 
-      const stateLabel = wakeMode >= 1 ? 'Monitored' : configured ? 'Stopped' : 'Unconfigured';
-      const stateColor = wakeMode >= 1 ? '#57d36b' : configured ? '#eab308' : '#ef4444';
+      // Read state slot[3] for more accurate state
+      let rawState = 0;
+      if (hasCode) {
+        try {
+          const storageVal = await rpcProvider.getStorage(addr, 3n);
+          rawState = parseInt(storageVal.slice(-2), 16);
+        } catch(e) {}
+      }
+
+      // State labels based on on-chain analysis
+      // 0=uninitialized, 1=deployed, 2=configuring, 3=configuring, 4=configured, 5=armed/active, 6+=running
+      const stateMap = {
+        0: { label: 'Uninitialized', color: '#6b7280' },
+        1: { label: 'Deployed', color: '#ef4444' },
+        2: { label: 'Configuring', color: '#eab308' },
+        3: { label: 'Configuring', color: '#eab308' },
+        4: { label: 'Configured', color: '#3b82f6' },
+        5: { label: 'Armed', color: '#57d36b' },
+      };
+      const stateInfo = stateMap[rawState] || { label: `State ${rawState}`, color: '#8b5cf6' };
+      
+      // Owner mismatch detection
+      const isOwnerMatch = owner.toLowerCase() === userAddress.toLowerCase();
+      const ownerWarning = !isOwnerMatch && owner !== 'N/A' 
+        ? `<div class="flex items-center gap-1 mt-1 px-2 py-1 rounded" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3)">
+            <span class="text-red-400 text-xs">⚠️ Owner mismatch — deployed from ${owner.slice(0,8)}...${owner.slice(-6)}</span>
+          </div>`
+        : '';
+
+      const stateLabel = stateInfo.label;
+      const stateColor = stateInfo.color;
       const balStr = balance > 0n ? ethers.formatEther(balance) : '0';
       const blocksLeft = Number(lockUntil) - currentBlock;
 
@@ -1371,17 +1554,30 @@ async function loadMyAgents() {
             </div>
             <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:${stateColor}20;color:${stateColor}">${stateLabel}</span>
           </div>
-          <div class="space-y-1 text-xs">
+          ${ownerWarning}
+          <div class="space-y-1 text-xs mt-2">
             <div class="flex justify-between">
               <span class="text-slate-500">Address</span>
               <a href="https://explorer.ritualfoundation.org/agents/${addr}" target="_blank" class="mono tx-hash">${addr.slice(0,10)}...${addr.slice(-8)}</a>
             </div>
             <div class="flex justify-between">
+              <span class="text-slate-500">Owner</span>
+              <span class="mono ${isOwnerMatch ? 'text-green-400' : 'text-red-400'}">${owner.slice(0,10)}...${owner.slice(-8)}</span>
+            </div>
+            <div class="flex justify-between">
               <span class="text-slate-500">Balance</span>
               <span class="text-slate-300 font-semibold">${balStr} RITUAL</span>
             </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">State</span>
+              <span class="text-slate-300">${rawState} (${stateLabel})</span>
+            </div>
             ${blocksLeft > 0 ? `<div class="flex justify-between"><span class="text-slate-500">Lock</span><span class="text-slate-300">${Math.round(blocksLeft / BLOCKS_PER_HOUR)}h left</span></div>` : ''}
             ${agent.lastBlock ? `<div class="flex justify-between"><span class="text-slate-500">Last Heartbeat</span><span class="text-slate-300">Block ${Number(agent.lastBlock).toLocaleString()}</span></div>` : ''}
+            <div class="flex justify-between">
+              <span class="text-slate-500">Source</span>
+              <span class="text-slate-400">${agent.source || 'unknown'}</span>
+            </div>
           </div>
           <div class="flex gap-2 mt-2 pt-2 border-t border-white/5">
             <button onclick="document.getElementById('m-deposit-agent').value='${addr}';switchTab('manage')" class="btn-outline rounded-lg px-2 py-1 text-xs flex-1">Deposit</button>

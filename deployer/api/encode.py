@@ -135,7 +135,20 @@ def encode_calldata(body: dict) -> dict:
     if not services:
         raise RuntimeError("No valid TEE services found in registry")
 
-    node = services[0][0]
+    # Use selected executor if provided, otherwise pick first
+    executor_address = body.get("executorAddress")
+    node = None
+    if executor_address:
+        # Find the matching executor in services
+        for svc in services:
+            if svc[1] and Web3.to_checksum_address(svc[0][1]).lower() == executor_address.lower():
+                node = svc[0]
+                break
+        if not node:
+            raise RuntimeError(f"Selected executor {executor_address} not found in active registry")
+    else:
+        node = services[0][0]
+    
     executor = Web3.to_checksum_address(node[1])
     pub_key_bytes = bytes(node[3])
     pub_key_hex = pub_key_bytes.hex()
