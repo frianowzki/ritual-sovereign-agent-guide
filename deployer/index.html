@@ -943,8 +943,17 @@ async function deployAgent() {
     for (let i = 0; i < 60; i++) {  // 60 × 5s = 300s = 5 min max
       await new Promise(r => setTimeout(r, 5000));
       try {
-        const cfgResult = await rpcProvider.call({ to: harnessAddr, data: '0xf42a46d7' });
-        if (cfgResult.slice(66 - 2) === '01') {
+        // Check wakeMode: 0=uninit, 1=stopped, 2=configured, 3+=armed
+        const wmResult = await rpcProvider.call({ to: harnessAddr, data: '0xc9777451' });
+        const wakeMode = parseInt(wmResult.hex(), 16);
+        if (wakeMode >= 3) {
+          agentConfigured = true;
+          break;
+        }
+        // Also check state selector as fallback
+        const stateResult = await rpcProvider.call({ to: harnessAddr, data: '0x24974129' });
+        const state = parseInt(stateResult.hex(), 16);
+        if (state >= 2 && i >= 12) {  // state=2 after 60s = good enough
           agentConfigured = true;
           break;
         }
@@ -959,9 +968,9 @@ async function deployAgent() {
       // Callback didn't complete in 5 min — funds are deposited but agent unconfigured
       updateProgress(100, 'Partial — needs manual restart');
       log(termDiv, 'warn', '═══════════════════════════════════════');
-      log(termDiv, 'warn', 'TX confirmed but TEE callback did not complete in 5 min.');
-      log(termDiv, 'warn', 'Your funds are deposited. The agent is deployed but unconfigured.');
-      log(termDiv, 'warn', 'Go to Manage tab > Restart to trigger the callback again.');
+      log(termDiv, 'warn', 'TX confirmed but agent not armed in 5 min.');
+      log(termDiv, 'warn', 'Funds deposited. Agent deployed but scheduler not armed.');
+      log(termDiv, 'warn', 'Go to Deploy tab with SAME salt to re-trigger configureFundAndStart.');
       log(termDiv, 'warn', '═══════════════════════════════════════');
       log(termDiv, 'info', `Harness: <a href='https://explorer.ritualfoundation.org/agents/${harnessAddr}' target='_blank' class='tx-hash'>${harnessAddr}</a>`);
 
@@ -972,7 +981,7 @@ async function deployAgent() {
       // Full success
       updateProgress(100, 'Complete');
       log(termDiv, 'success', '═══════════════════════════════════════');
-      log(termDiv, 'success', `SOVEREIGN AGENT DEPLOYED & CONFIGURED`);
+      log(termDiv, 'success', `SOVEREIGN AGENT DEPLOYED & ARMED`);
       log(termDiv, 'success', `Harness: <a href='https://explorer.ritualfoundation.org/agents/${harnessAddr}' target='_blank' class='tx-hash'>${harnessAddr}</a>`);
       log(termDiv, 'success', `Model: ${model} | Fund: ${fundAmount} RITUAL`);
       log(termDiv, 'success', '═══════════════════════════════════════');
@@ -1146,36 +1155,55 @@ async function restartAgent() {
   termDiv.classList.remove('hidden');
   termDiv.innerHTML = '';
   btn.disabled = true;
-  btn.innerHTML = 'Restarting...';
+  btn.innerHTML = 'Checking...';
 
   try {
-    log(termDiv, 'comment', `Restart agent ${agent}`);
+    log(termDiv, 'comment', `Diagnose agent ${agent.slice(0,10)}...`);
 
-    // The Ritual harness doesn't expose a restart() function.
-    // Instead, reconfigure the agent by calling configureFundAndStart again.
-    // This requires: calldata from the encode API + funds.
-    log(termDiv, 'cmd', 'Harness does not expose restart() directly.');
-    log(termDiv, 'cmd', 'To restart: re-deploy with same salt (predictHarness returns same address if already deployed).');
-    log(termDiv, 'info', 'Go to Deploy tab > same salt > Deploy. The harness reuses if already exists.');
-    log(termDiv, 'info', 'Or deposit more funds to keep the agent running.');
-
-    // Check if agent has funds
     const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
     const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
-    const balance = await wallet.balanceOf(agent);
-    const balFmt = parseFloat(ethers.formatEther(balance)).toFixed(4);
-    log(termDiv, 'info', `Current balance: ${balFmt} RITUAL`);
 
-    if (balance === 0n) {
-      log(termDiv, 'warn', 'No funds. Deposit first, then re-deploy with same salt.');
+    // Check on-chain state
+    let wakeMode = 0;
+    try {
+      const r = await rpcProvider.call({ to: agent, data: '0xc9777451' });
+      wakeMode = parseInt(r.hex(), 16);
+    } catch(e) {}
+
+    const balance = await wallet.balanceOf(agent);
+    const lockUntil = await wallet.lockUntil(agent);
+    const currentBlock = await rpcProvider.getBlockNumber();
+    const balFmt = parseFloat(ethers.formatEther(balance)).toFixed(4);
+    const blocksLeft = Number(lockUntil) - currentBlock;
+    const hoursLeft = Math.max(0, Math.round(blocksLeft * 3.5 / 3600));
+
+    log(termDiv, 'info', `Balance: ${balFmt} RITUAL | Lock: ${hoursLeft > 0 ? hoursLeft + 'h left' : 'expired'}`);
+    log(termDiv, 'info', `Wake mode: ${wakeMode} (${wakeMode === 0 ? 'uninitialized' : wakeMode === 1 ? 'stopped' : wakeMode === 2 ? 'configured, not armed' : wakeMode >= 3 ? 'armed/active' : 'unknown'})`);
+
+    if (wakeMode >= 3) {
+      log(termDiv, 'success', 'Agent is armed and active. No restart needed.');
+    } else if (wakeMode === 2) {
+      log(termDiv, 'warn', 'Agent configured but not armed (wakeMode=2).');
+      log(termDiv, 'cmd', 'Re-triggering configureFundAndStart...');
+      log(termDiv, 'info', 'Go to Deploy tab > use SAME salt > Deploy again.');
+      log(termDiv, 'info', 'CREATE3 deterministic: same salt = same address = same harness.');
+      log(termDiv, 'info', 'The new configureFundAndStart will re-arm the scheduler.');
+    } else if (balance === 0n) {
+      log(termDiv, 'warn', 'No funds. Deposit first.');
     } else {
-      log(termDiv, 'info', 'Agent has funds. Re-deploy with same salt from Deploy tab to reconfigure.');
+      log(termDiv, 'warn', `Agent in unknown state (wakeMode=${wakeMode}).`);
+      log(termDiv, 'info', 'Try Deploy tab with same salt to reconfigure.');
     }
+
+    // Link to deploy tab with salt pre-fill hint
+    log(termDiv, 'info', '');
+    log(termDiv, 'cmd', 'To reconfigure: Deploy tab > enter same salt > Deploy');
+
   } catch (err) {
     log(termDiv, 'error', `Error: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = 'Restart Agent';
+    btn.innerHTML = 'Check & Restart';
   }
 }
 
