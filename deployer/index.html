@@ -2117,15 +2117,9 @@ async function stopAgent() {
 // ═══════════════════════════════════════════════════════════
 //  MY AGENTS — Explorer primary + on-chain verification + cache
 // ═══════════════════════════════════════════════════════════
-const RITUAL_CHAIN_ID = 13827;
 let allAgentsData = [];
 let selectedAgents = new Set();
 let currentDetailAddr = null;
-
-const RITUAL_WALLET_ABI_LOCAL = [
-  'function balanceOf(address account) view returns (uint256)',
-  'function lockUntil(address account) view returns (uint256)'
-];
 
 // ── Network Detection ──
 async function checkRitualNetwork() {
@@ -2283,7 +2277,7 @@ async function verifyOnChain(addr, rpcProvider) {
     } catch(e) {}
 
     // Balance + Lock
-    const wallet = new ethers.Contract(RITUAL_WALLET, RITUAL_WALLET_ABI_LOCAL, rpcProvider);
+    const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
     result.balance = await wallet.balanceOf(addr);
     result.lockUntil = await wallet.lockUntil(addr);
     result.currentBlock = await rpcProvider.getBlockNumber();
