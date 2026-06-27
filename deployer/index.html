@@ -62,45 +62,49 @@
     /* ═══ GOOEY INPUT ═══ */
     .gooey-wrap { position: relative; width: 100%; height: 56px; }
     .gooey-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-    .gooey-blobs { filter: url(#gooey); position: absolute; inset: 0; }
+    .gooey-blobs { filter: url(#gooey); position: absolute; inset: -12px; z-index: 0; }
     .gooey-blob {
       position: absolute; border-radius: 50%;
-      width: 40px; height: 40px; top: 8px; left: 8px;
-      opacity: 0.7;
+      width: 44px; height: 44px;
+      opacity: 0.55;
     }
-    .gooey-blob-1 { background: #57d36b; animation: blobOrbit1 6s ease-in-out infinite; }
-    .gooey-blob-2 { background: #3da854; animation: blobOrbit2 5s ease-in-out infinite; width: 32px; height: 32px; top: 12px; }
-    .gooey-blob-3 { background: #2d7a3e; animation: blobOrbit3 7s ease-in-out infinite; width: 28px; height: 28px; top: 14px; }
-    .gooey-blob-4 { background: rgba(87,211,107,0.5); animation: blobOrbit4 8s ease-in-out infinite; width: 24px; height: 24px; top: 16px; }
+    .gooey-blob-1 { background: #57d36b; animation: blobOrbit1 8s ease-in-out infinite; }
+    .gooey-blob-2 { background: #3da854; animation: blobOrbit2 6s ease-in-out infinite; width: 36px; height: 36px; }
+    .gooey-blob-3 { background: #2d7a3e; animation: blobOrbit3 10s ease-in-out infinite; width: 30px; height: 30px; }
+    .gooey-blob-4 { background: rgba(87,211,107,0.4); animation: blobOrbit4 7s ease-in-out infinite; width: 26px; height: 26px; }
     @keyframes blobOrbit1 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(60px, -6px) scale(1.1); }
-      50% { transform: translate(140px, 2px) scale(0.9); }
-      75% { transform: translate(220px, -4px) scale(1.05); }
+      0% { transform: translate(0, 10px) scale(1); }
+      20% { transform: translate(80px, -8px) scale(1.15); }
+      40% { transform: translate(200px, 6px) scale(0.85); }
+      60% { transform: translate(340px, -4px) scale(1.1); }
+      80% { transform: translate(480px, 8px) scale(0.9); }
+      100% { transform: translate(600px, -6px) scale(1.05); }
     }
     @keyframes blobOrbit2 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(80px, 6px) scale(0.85); }
-      50% { transform: translate(170px, -3px) scale(1.1); }
-      75% { transform: translate(250px, 5px) scale(0.95); }
+      0% { transform: translate(600px, 6px) scale(0.9); }
+      25% { transform: translate(450px, -10px) scale(1.1); }
+      50% { transform: translate(280px, 8px) scale(0.85); }
+      75% { transform: translate(100px, -5px) scale(1.05); }
+      100% { transform: translate(0, 6px) scale(0.9); }
     }
     @keyframes blobOrbit3 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(100px, -8px) scale(1.15); }
-      66% { transform: translate(200px, 6px) scale(0.8); }
+      0% { transform: translate(200px, -6px) scale(1.1); }
+      33% { transform: translate(500px, 10px) scale(0.8); }
+      66% { transform: translate(300px, -10px) scale(1.15); }
+      100% { transform: translate(200px, -6px) scale(1.1); }
     }
     @keyframes blobOrbit4 {
-      0%, 100% { transform: translate(0, 0) scale(0.9); }
-      20% { transform: translate(50px, 5px) scale(1.1); }
-      40% { transform: translate(120px, -4px) scale(0.85); }
-      60% { transform: translate(190px, 7px) scale(1.05); }
-      80% { transform: translate(260px, -2px) scale(0.95); }
+      0% { transform: translate(500px, 4px) scale(1); }
+      25% { transform: translate(300px, -8px) scale(1.1); }
+      50% { transform: translate(100px, 6px) scale(0.85); }
+      75% { transform: translate(30px, -3px) scale(1.05); }
+      100% { transform: translate(500px, 4px) scale(1); }
     }
     .gooey-input-field {
-      position: absolute; inset: 0; z-index: 2;
+      position: absolute; inset: 0; z-index: 2; overflow: hidden;
       width: 100%; height: 100%;
-      background: rgba(10, 10, 15, 0.85) !important;
-      border: 1px solid rgba(87,211,107,0.2) !important;
+      background: rgba(10, 10, 15, 0.75) !important;
+      border: 1px solid rgba(87,211,107,0.25) !important;
       border-radius: 16px;
       padding: 0 16px 0 44px;
       font-size: 14px;
