@@ -154,7 +154,7 @@
     .encrypted-text {
       font-family: 'Instrument Serif', Georgia, serif;
       font-size: 2.6rem; font-weight: 900;
-      letter-spacing: -0.06em; line-height: 1.05;
+      letter-spacing: -0.08em; line-height: 1.0;
       background: linear-gradient(135deg, #c9b8ff, #b49eff, #d4b8ff);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -254,35 +254,28 @@
       <!-- Left: Config -->
       <div class="space-y-3">
 
-        <!-- Step 1: LLM Provider -->
+        <!-- Step 1: Agent Config -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">1</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">LLM Provider</h3>
+            <h3 class="text-xs font-semibold" style="color:#b49eff">Agent Config</h3>
           </div>
           <div class="space-y-2">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Provider</label>
-              <select id="d-provider" class="w-full rounded-lg px-3 py-2 text-sm" onchange="updateModelOptions()">
-                <option value="native" selected>Ritual Native (no API key)</option>
-                <option value="openrouter">OpenRouter</option>
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic</option>
-                <option value="gemini">Google Gemini</option>
-              </select>
-            </div>
-            <div id="apikey-group" style="display:none">
-              <label class="text-xs text-slate-500 mb-1 block">API Key</label>
-              <input id="d-apikey" type="password" placeholder="sk-or-v1-..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-
+              <label class="text-xs text-slate-500 mb-1 block">Salt (unique per agent)</label>
+              <div class="flex gap-2">
+                <input id="d-salt" type="text" value="my-sovereign-agent" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                <button onclick="randomizeSalt()" class="btn-outline rounded-lg px-3 py-2 text-sm flex-shrink-0" title="Randomize salt"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg></button>
+              </div>
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Model</label>
-              <div class="flex gap-2">
-                <select id="d-model" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></select>
-                <button onclick="simulateLLM()" id="llm-test-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs flex-shrink-0" title="Test this provider + model">Test</button>
+              <label class="text-xs text-slate-500 mb-1 block">Agent Prompt</label>
+              <div class="flex gap-2 mb-1">
+                <button onclick="loadTemplate('default')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Default</button>
+                <button onclick="loadTemplate('market')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Market</button>
+                <button onclick="loadTemplate('research')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Research</button>
               </div>
-              <div id="llm-test-result" class="hidden mt-1.5 rounded-lg px-2.5 py-1.5 text-xs"></div>
+              <textarea id="d-prompt" rows="3" placeholder="You are a sovereign AI agent on Ritual Chain..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></textarea>
             </div>
           </div>
         </div>
@@ -346,33 +339,40 @@
           </div>
         </div>
 
-        <!-- Step 3: Agent Config -->
+        <!-- Step 3: LLM Provider -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">3</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">Agent Config</h3>
+            <h3 class="text-xs font-semibold" style="color:#b49eff">LLM Provider</h3>
           </div>
           <div class="space-y-2">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Salt (unique per agent)</label>
-              <div class="flex gap-2">
-                <input id="d-salt" type="text" value="my-sovereign-agent" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-                <button onclick="randomizeSalt()" class="btn-outline rounded-lg px-3 py-2 text-sm flex-shrink-0" title="Randomize salt"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg></button>
-              </div>
+              <label class="text-xs text-slate-500 mb-1 block">Provider</label>
+              <select id="d-provider" class="w-full rounded-lg px-3 py-2 text-sm" onchange="updateModelOptions()">
+                <option value="native" selected>Ritual Native (no API key)</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="gemini">Google Gemini</option>
+              </select>
+            </div>
+            <div id="apikey-group" style="display:none">
+              <label class="text-xs text-slate-500 mb-1 block">API Key</label>
+              <input id="d-apikey" type="password" placeholder="sk-or-v1-..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">Agent Prompt</label>
-              <div class="flex gap-2 mb-1">
-                <button onclick="loadTemplate('default')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Default</button>
-                <button onclick="loadTemplate('market')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Market</button>
-                <button onclick="loadTemplate('research')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Research</button>
+              <label class="text-xs text-slate-500 mb-1 block">Model</label>
+              <div class="flex gap-2">
+                <select id="d-model" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></select>
+                <button onclick="simulateLLM()" id="llm-test-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs flex-shrink-0" title="Test this provider + model">Test</button>
               </div>
-              <textarea id="d-prompt" rows="3" placeholder="You are a sovereign AI agent on Ritual Chain..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></textarea>
+              <div id="llm-test-result" class="hidden mt-1.5 rounded-lg px-2.5 py-1.5 text-xs"></div>
             </div>
           </div>
         </div>
 
-        <!-- Step 2.5: Executor Selection -->
+        <!-- Step 4: TEE Executor -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">4</div>
@@ -429,8 +429,8 @@
                 <option value="300">~1.8 min (300 blocks)</option>
                 <option value="500">~2.9 min (500 blocks)</option>
                 <option value="1000">~5.8 min (1,000 blocks)</option>
-                <option value="2000">~12 min (2,000 blocks)</option>
-                <option value="5000" selected>~29 min (5,000 blocks)</option>
+                <option value="2000" selected>~12 min (2,000 blocks)</option>
+                <option value="5000">~29 min (5,000 blocks)</option>
               </select>
             </div>
             <div>
@@ -693,7 +693,7 @@
 </main>
 
 <!-- Footer -->
-<footer class="border-t border-white/5 px-4 md:px-6 py-2 flex-shrink-0 mt-auto">
+<footer class="border-t border-white/5 px-4 md:px-6 py-2 flex-shrink-0 mt-auto" style="background:#000">
   <div class="max-w-5xl mx-auto">
     <span class="text-xs text-slate-600">Built by Frianowzki on Ritual Testnet</span>
   </div>
