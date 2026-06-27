@@ -74,6 +74,11 @@ def encode_calldata(body: dict) -> dict:
     frequency = int(body.get("frequency", 2000))
     window_calls = int(body.get("windowCalls", 5))
     lock_duration = int(body.get("lockDuration", 100000))
+    scheduler_gas = int(body.get("schedulerGas", 800000))
+    rollover_bps = int(body.get("rolloverBps", 5000))
+    rollover_retry = int(body.get("rolloverRetry", 1))
+    max_fee_gwei = int(body.get("maxFeeGwei", 20))
+    priority_fee_gwei = int(body.get("priorityFeeGwei", 1))
 
     w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
@@ -108,7 +113,7 @@ def encode_calldata(body: dict) -> dict:
         3_000_000,                        # 9. agentGasLimit
         1_000_000_000,                    # 10. agentTimeoutNs
         100_000_000,                      # 11. agentMemoryBytes
-        6,                                # 12. cliType (6=ZeroClaw)
+        5,                                # 12. cliType (5=ZeroClaw)
         prompt,                           # 13. prompt
         encrypted,                        # 14. encryptedSecrets
         ("hf", f"{hf_repo}/sessions/session-001.jsonl", "HF_TOKEN"),  # 15. sessionStorage
@@ -124,19 +129,19 @@ def encode_calldata(body: dict) -> dict:
 
     # ── 5. Schedule config ──
     schedule = (
-        500000,                   # schedulerGas
-        frequency,                # frequency (blocks)
-        500,                      # schedulerTtl
-        w3.to_wei(20, "gwei"),    # maxFeePerGas
-        w3.to_wei(1, "gwei"),     # maxPriorityFeePerGas
+        scheduler_gas,                  # schedulerGas
+        frequency,                      # frequency (blocks)
+        500,                            # schedulerTtl (hard cap 500)
+        w3.to_wei(max_fee_gwei, "gwei"),      # maxFeePerGas
+        w3.to_wei(priority_fee_gwei, "gwei"), # maxPriorityFeePerGas
         0,                        # value
     )
 
     # ── 6. Rolling config ──
     rolling = (
-        window_calls,   # windowNumCalls
-        5000,           # rolloverThresholdBps
-        1,              # rolloverRetryEveryCalls
+        window_calls,     # windowNumCalls
+        rollover_bps,     # rolloverThresholdBps
+        rollover_retry,   # rolloverRetryEveryCalls
     )
 
     # ── 7. ABI-encode ──
