@@ -166,7 +166,7 @@
         <!-- Step 2.5: Executor Selection -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">⚡</div>
+            <div class="step-badge step-active">3</div>
             <h3 class="text-xs font-semibold" style="color:#57d36b">TEE Executor</h3>
             <button onclick="refreshExecutors()" class="btn-outline rounded-lg px-2 py-0.5 text-xs ml-auto" id="executor-refresh-btn">Refresh</button>
           </div>
@@ -201,10 +201,10 @@
           </div>
         </div>
 
-        <!-- Step 3: Agent Config -->
+        <!-- Step 4: Agent Config -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">3</div>
+            <div class="step-badge step-active">4</div>
             <h3 class="text-xs font-semibold" style="color:#57d36b">Agent Config</h3>
           </div>
           <div class="space-y-2">
@@ -231,10 +231,10 @@
       <!-- Right: Schedule + Budget + Deploy -->
       <div class="space-y-3">
 
-        <!-- Step 4: Schedule & Budget -->
+        <!-- Step 5: Schedule & Budget -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">4</div>
+            <div class="step-badge step-active">5</div>
             <h3 class="text-xs font-semibold" style="color:#57d36b">Schedule & Budget</h3>
           </div>
           <div class="space-y-2">
@@ -284,8 +284,8 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <label class="text-xs text-slate-500 mb-1 block">Fund Amount (RITUAL)</label>
-                  <input id="d-fund" type="number" value="0.1" step="0.01" min="0.1" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-                  <p class="text-xs text-red-400 mt-0.5">Minimum 0.1</p>
+                  <input id="d-fund" type="number" value="0.25" step="0.01" min="0.25" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                  <p class="text-xs text-red-400 mt-0.5">Minimum 0.25</p>
                 </div>
                 <div>
                   <label class="text-xs text-slate-500 mb-1 block">Max Budget (RITUAL)</label>
@@ -357,8 +357,8 @@
             <div class="rounded-lg px-3 py-2 border" style="background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.2)">
               <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs">
                 <span class="text-slate-400">Deploy: ~0.02</span>
-                <span class="text-slate-400">Fund: <span id="est-fund">0.1</span></span>
-                <span class="text-white font-semibold">Total: ~<span id="est-total">0.12</span> RITUAL</span>
+                <span class="text-slate-400">Fund: <span id="est-fund">0.25</span></span>
+                <span class="text-white font-semibold">Total: ~<span id="est-total">0.27</span> RITUAL</span>
               </div>
             </div>
           </div>
@@ -814,8 +814,8 @@ async function deployAgent() {
     alert(`Schedule too aggressive: ${freq} × ${windowCalls} = ${scheduleTotal} blocks. Must be < 10,000.`);
     return;
   }
-  if (fundAmount < 0.1) {
-    alert(`Minimum fund is 0.1 RITUAL.`);
+  if (fundAmount < 0.25) {
+    alert(`Minimum fund is 0.25 RITUAL.`);
     return;
   }
 
