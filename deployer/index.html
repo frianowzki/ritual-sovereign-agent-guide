@@ -111,73 +111,7 @@
   <!-- ═══════════════ DEPLOY TAB ═══════════════ -->
   <div id="panel-deploy" class="fade-in flex-1 overflow-y-auto">
 
-    <!-- Progress Bar -->
-    <div class="mb-4 glass rounded-xl p-3">
-      <div class="flex items-center justify-between overflow-x-auto gap-1">
-        <div class="flex items-center gap-1 min-w-0" id="prog-1">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:#57d36b;color:#000">1</div>
-          <span class="text-xs whitespace-nowrap hidden md:inline">Connect</span>
-        </div>
-        <div class="h-px flex-1 min-w-[16px]" style="background:rgba(255,255,255,0.1)" id="prog-line-1"></div>
-        <div class="flex items-center gap-1 min-w-0" id="prog-2">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(255,255,255,0.1);color:#64748b">2</div>
-          <span class="text-xs whitespace-nowrap hidden md:inline" style="color:#64748b">Setup</span>
-        </div>
-        <div class="h-px flex-1 min-w-[16px]" style="background:rgba(255,255,255,0.1)" id="prog-line-2"></div>
-        <div class="flex items-center gap-1 min-w-0" id="prog-3">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(255,255,255,0.1);color:#64748b">3</div>
-          <span class="text-xs whitespace-nowrap hidden md:inline" style="color:#64748b">Test</span>
-        </div>
-        <div class="h-px flex-1 min-w-[16px]" style="background:rgba(255,255,255,0.1)" id="prog-line-3"></div>
-        <div class="flex items-center gap-1 min-w-0" id="prog-4">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(255,255,255,0.1);color:#64748b">4</div>
-          <span class="text-xs whitespace-nowrap hidden md:inline" style="color:#64748b">Prepare</span>
-        </div>
-        <div class="h-px flex-1 min-w-[16px]" style="background:rgba(255,255,255,0.1)" id="prog-line-4"></div>
-        <div class="flex items-center gap-1 min-w-0" id="prog-5">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(255,255,255,0.1);color:#64748b">5</div>
-          <span class="text-xs whitespace-nowrap hidden md:inline" style="color:#64748b">Deploy</span>
-        </div>
-        <div class="h-px flex-1 min-w-[16px]" style="background:rgba(255,255,255,0.1)" id="prog-line-5"></div>
-        <div class="flex items-center gap-1 min-w-0" id="prog-6">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(255,255,255,0.1);color:#64748b">6</div>
-          <span class="text-xs whitespace-nowrap hidden md:inline" style="color:#64748b">Monitor</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Setup Checklist -->
-    <details class="mb-3 glass rounded-xl overflow-hidden">
-      <summary class="px-3 py-2 cursor-pointer text-xs font-semibold flex items-center gap-2" style="color:#57d36b">
-        <span>🆕 NEW HERE? Open Setup Checklist</span>
-      </summary>
-      <div class="px-3 pb-3 space-y-2">
-        <p class="text-xs text-slate-400">You'll deploy a Sovereign Agent — a tiny on-chain bot that wakes up and runs a prompt on a TEE-verified AI executor. Total time: 5–10 minutes.</p>
-        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer"><input type="checkbox" class="rounded" style="accent-color:#57d36b"> Ritual Testnet wallet with 0.26+ RIT</label>
-        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer"><input type="checkbox" class="rounded" style="accent-color:#57d36b"> HuggingFace account + dataset + write token</label>
-        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer"><input type="checkbox" class="rounded" style="accent-color:#57d36b"> LLM API key (or use Ritual Native, no key needed)</label>
-      </div>
-    </details>
-
-    <!-- Common Errors + Fixes -->
-    <details class="mb-3 glass rounded-xl overflow-hidden">
-      <summary class="px-3 py-2 cursor-pointer text-xs font-semibold flex items-center gap-2" style="color:#ef4444">
-        <span>⚠️ IF SOMETHING GOES WRONG (Common Errors + Fixes)</span>
-      </summary>
-      <div class="px-3 pb-3 space-y-2 text-xs">
-        <div class="rounded-lg p-2" style="background:rgba(255,255,255,0.03)"><span class="text-red-400 font-semibold">"configureFundAndStart reverted"</span><br><span class="text-slate-400">→ Wrong salt (already exists), no pending async jobs, or insufficient funds</span></div>
-        <div class="rounded-lg p-2" style="background:rgba(255,255,255,0.03)"><span class="text-red-400 font-semibold">"Simulation REVERTED"</span><br><span class="text-slate-400">→ Check: funds in RitualWallet (not harness), no pending jobs for this wallet, correct params</span></div>
-        <div class="rounded-lg p-2" style="background:rgba(255,255,255,0.03)"><span class="text-yellow-400 font-semibold">"Phase 2 callback not completing"</span><br><span class="text-slate-400">→ TEE executor busy or credentials wrong. Wait 5 min, then deploy fresh with new salt</span></div>
-        <div class="rounded-lg p-2" style="background:rgba(255,255,255,0.03)"><span class="text-red-400 font-semibold">"HF token invalid"</span><br><span class="text-slate-400">→ Ensure token has WRITE access to the dataset</span></div>
-        <div class="rounded-lg p-2" style="background:rgba(255,255,255,0.03)"><span class="text-yellow-400 font-semibold">"Agent shows wakeMode=1 (stopped)"</span><br><span class="text-slate-400">→ Funds depleted or lock expired. Deposit more or deploy fresh</span></div>
-      </div>
-    </details>
-
-    <!-- Executor Health Banner -->
-    <div id="executor-health" class="mb-3 glass rounded-xl p-2 flex items-center gap-3">
-      <div id="health-dot" class="w-2 h-2 rounded-full flex-shrink-0" style="background:#64748b"></div>
-      <span id="health-text" class="text-xs text-slate-400">Loading executor health...</span>
-    </div>
 
     <div class="grid md:grid-cols-2 gap-3">
 
@@ -204,16 +138,7 @@
             <div id="apikey-group" style="display:none">
               <label class="text-xs text-slate-500 mb-1 block">API Key</label>
               <input id="d-apikey" type="password" placeholder="sk-or-v1-..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-              <details class="mt-1">
-                <summary class="text-xs cursor-pointer" style="color:#57d36b">SHOW How to Get an API Key</summary>
-                <div class="mt-1 space-y-1 text-xs text-slate-400 pl-2 border-l" style="border-color:rgba(87,211,107,0.3)">
-                  <p>1. Go to <a href="https://openrouter.ai" target="_blank" class="tx-hash">openrouter.ai</a></p>
-                  <p>2. Sign up / Sign in</p>
-                  <p>3. Go to Keys → Create Key</p>
-                  <p>4. Copy the key (starts with sk-or-)</p>
-                  <p>5. Paste above — free models available (no billing required)</p>
-                </div>
-              </details>
+
             </div>
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Model</label>
@@ -238,17 +163,7 @@
               <label class="text-xs text-slate-500 mb-1 block">Token (write access)</label>
               <input id="d-hftoken" type="password" placeholder="hf_..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
               <p class="text-xs mt-1" style="color:#eab308">Requires <strong>write</strong> access.</p>
-              <details class="mt-1">
-                <summary class="text-xs cursor-pointer" style="color:#57d36b">SHOW HuggingFace Setup Steps</summary>
-                <div class="mt-1 space-y-1 text-xs text-slate-400 pl-2 border-l" style="border-color:rgba(87,211,107,0.3)">
-                  <p>1. Go to <a href="https://huggingface.co/new-dataset" target="_blank" class="tx-hash">huggingface.co/new-dataset</a></p>
-                  <p>2. Create a new dataset (e.g., "myname/agent-data")</p>
-                  <p>3. Go to Settings → Access Tokens → Create new token</p>
-                  <p>4. Select "Write" permissions</p>
-                  <p>5. Copy the token (starts with hf_)</p>
-                  <p>6. Paste both repo ID and token above</p>
-                </div>
-              </details>
+
             </div>
           </div>
           <!-- Smoke Test Button -->
@@ -472,6 +387,10 @@
         <div id="deploy-progress" class="hidden glass rounded-xl p-3">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-xs font-semibold" style="color:#57d36b">Deploy Progress</h3>
+            <span id="deploy-step-label" class="text-xs text-slate-500">Step 1/3</span>
+          </div>
+          <div class="progress-bar mb-3">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
           </div>
           <div id="deploy-terminal" class="terminal rounded-lg p-2 text-xs mono max-h-32 overflow-y-auto"></div>
         </div>
@@ -750,7 +669,6 @@ function updateWalletUI(connected) {
     status.classList.add('text-green-400');
     connectBtn.classList.add('hidden');
     disconnectBtn.classList.remove('hidden');
-    updateProgress(2);
     // Fetch balance
     provider.getBalance(userAddress).then(bal => {
       const badge = document.getElementById('wallet-balance-badge');
@@ -939,8 +857,7 @@ async function deployAgent() {
   btn.innerHTML = 'Deploying...';
 
   try {
-    // Step 5: Deploy Harness
-    updateProgress(5);
+    updateProgress(33, 'Step 1/3 — Deploy Harness');
     log(termDiv, 'comment', '── Step 1: deployHarness ──');
 
     const factory = new ethers.Contract(SOVEREIGN_FACTORY, FACTORY_ABI, signer);
@@ -977,11 +894,10 @@ async function deployAgent() {
       log(termDiv, 'success', `Harness deployed: ${harnessAddr}`);
     }
 
-    // Step 4: Prepare calldata
-    updateProgress(4);
+    updateProgress(66, 'Step 2/3 — Prepare');
     log(termDiv, 'comment', '── Step 2: Prepare ──');
 
-    // Step 5: configureFundAndStart
+    updateProgress(90, 'Step 3/3 — Configure & Fund');
     log(termDiv, 'comment', '── Step 3: configureFundAndStart ──');
     log(termDiv, 'cmd', `Fund: ${fundAmount} RITUAL | Lock: ${lockDuration} blocks | Freq: ${freq} blocks`);
 
@@ -1090,7 +1006,7 @@ async function deployAgent() {
     log(termDiv, 'cmd', 'TX confirmed. Waiting for TEE callback (async phase)...');
     log(termDiv, 'info', 'This takes 1-5 min — the TEE executor must pick up and arm the scheduler.');
 
-    updateProgress(6);
+    updateProgress(95, 'Step 3/3 — Waiting for TEE callback');
 
     let agentConfigured = false;
     const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
@@ -1121,6 +1037,7 @@ async function deployAgent() {
 
     if (!agentConfigured) {
       // Callback didn't complete in 5 min — funds are deposited but agent unconfigured
+      updateProgress(100, 'Partial — needs manual restart');
       log(termDiv, 'warn', '═══════════════════════════════════════');
       log(termDiv, 'warn', 'TX confirmed but agent not armed in 5 min.');
       log(termDiv, 'warn', 'Funds deposited. Agent deployed but scheduler not armed.');
@@ -1133,6 +1050,7 @@ async function deployAgent() {
       btn.classList.add('btn-outline');
     } else {
       // Full success
+      updateProgress(100, 'Complete');
       log(termDiv, 'success', '═══════════════════════════════════════');
       log(termDiv, 'success', `SOVEREIGN AGENT DEPLOYED & ARMED`);
       log(termDiv, 'success', `Harness: <a href='https://explorer.ritualfoundation.org/agents/${harnessAddr}' target='_blank' class='tx-hash'>${harnessAddr}</a>`);
@@ -1250,45 +1168,6 @@ async function checkStatusOnChain() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  PROGRESS BAR — 6-step visual indicator
-// ═══════════════════════════════════════════════════════════
-let currentProgressStep = 1;
-
-function updateProgress(step) {
-  currentProgressStep = step;
-  for (let i = 1; i <= 6; i++) {
-    const el = document.getElementById(`prog-${i}`);
-    if (!el) continue;
-    const circle = el.querySelector('div');
-    const label = el.querySelector('span');
-    const line = document.getElementById(`prog-line-${i}`);
-    
-    if (i < step) {
-      // Completed
-      circle.style.background = '#57d36b';
-      circle.style.color = '#000';
-      circle.innerHTML = '✓';
-      if (label) { label.style.color = '#57d36b'; }
-      if (line) line.style.background = '#57d36b';
-    } else if (i === step) {
-      // Active
-      circle.style.background = '#57d36b';
-      circle.style.color = '#000';
-      circle.innerHTML = i;
-      if (label) { label.style.color = '#e2e8f0'; }
-      if (line) line.style.background = 'rgba(255,255,255,0.1)';
-    } else {
-      // Future
-      circle.style.background = 'rgba(255,255,255,0.1)';
-      circle.style.color = '#64748b';
-      circle.innerHTML = i;
-      if (label) { label.style.color = '#64748b'; }
-      if (line) line.style.background = 'rgba(255,255,255,0.1)';
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
 //  SMOKE TEST — validate HF + LLM before on-chain
 // ═══════════════════════════════════════════════════════════
 let smokeTestPassed = false;
@@ -1391,7 +1270,7 @@ async function runSmokeTest() {
     resultDiv.style.border = allPassed ? '1px solid rgba(57,255,20,0.3)' : '1px solid rgba(239,68,68,0.3)';
     resultDiv.innerHTML = results.join('<br>');
     
-    updateProgress(allPassed ? 4 : 3);
+    smokeTestPassed = allPassed;
     
   } catch (err) {
     resultDiv.style.background = 'rgba(239,68,68,0.1)';
@@ -1427,7 +1306,7 @@ async function updateExecutorHealth() {
     
     if (count > 5) {
       color = '#57d36b';
-      label = `${count} active executors — Good window to deploy`;
+      label = `${count} active executors`;
     } else if (count >= 3) {
       color = '#eab308';
       label = `${count} active executors — Deploy possible but limited`;
@@ -1566,8 +1445,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   checkSmokeTestReady();
   
-  // Update progress based on wallet state
-  if (typeof userAddress !== 'undefined' && userAddress) updateProgress(2);
+
 });
 
 function randomizeSalt() {
@@ -1979,6 +1857,11 @@ function log(container, cls, text) {
   line.innerHTML = text;
   container.appendChild(line);
   container.scrollTop = container.scrollHeight;
+}
+
+function updateProgress(percent, label) {
+  document.getElementById('progress-fill').style.width = percent + '%';
+  document.getElementById('deploy-step-label').textContent = label;
 }
 
 // ═══════════════════════════════════════════════════════════
