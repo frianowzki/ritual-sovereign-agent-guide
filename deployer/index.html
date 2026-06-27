@@ -55,6 +55,9 @@
     .step-pending { background: rgba(255,255,255,0.1); color: #64748b; }
     .progress-bar { height: 3px; background: rgba(180,158,255,0.15); border-radius: 2px; overflow: hidden; }
     .progress-fill { height: 100%; background: #b49eff; border-radius: 2px; transition: width 0.3s; }
+    .cli-type-option input:checked + div:first-child { color: #b49eff; }
+    .cli-type-option:has(input:checked) { border-color: #b49eff; background: rgba(180,158,255,0.15) !important; }
+    .cli-type-option:hover { border-color: rgba(180,158,255,0.5); }
     select option { background: #0a0a0f; color: #e2e8f0; }
     select { color-scheme: dark; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23b49eff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 32px !important; }
     ::selection { background: rgba(180,158,255,0.3); color: #fff; }
@@ -405,6 +408,21 @@
                   <span class="text-slate-400">TEE Type</span>
                   <span id="exec-teetype" class="text-slate-300"></span>
                 </div>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">CLI Runtime</label>
+              <div class="flex gap-2">
+                <label class="cli-type-option flex-1 rounded-lg px-3 py-2 border cursor-pointer text-center transition-all" style="border-color:rgba(180,158,255,0.2);background:rgba(180,158,255,0.05)" id="cli-opt-5">
+                  <input type="radio" name="cli-type" value="5" class="hidden">
+                  <div class="text-sm font-semibold text-slate-300">Crush</div>
+                  <div class="text-xs text-slate-500">CLI Type 5</div>
+                </label>
+                <label class="cli-type-option flex-1 rounded-lg px-3 py-2 border cursor-pointer text-center transition-all" style="border-color:rgba(180,158,255,0.2);background:rgba(180,158,255,0.05)" id="cli-opt-6">
+                  <input type="radio" name="cli-type" value="6" class="hidden" checked>
+                  <div class="text-sm font-semibold text-slate-300">ZeroClaw</div>
+                  <div class="text-xs text-slate-500">CLI Type 6</div>
+                </label>
               </div>
             </div>
           </div>
@@ -1246,7 +1264,7 @@ async function deployAgent() {
           rolloverRetry: rolloverRetry,
           maxFeeGwei: maxFeeGwei,
           priorityFeeGwei: priorityFeeGwei,
-          cliType: 6,
+          cliType: parseInt(document.querySelector('input[name="cli-type"]:checked')?.value || '6'),
           sender: userAddress,
           executorAddress: selectedExec ? selectedExec.address : null
         })
@@ -1260,6 +1278,8 @@ async function deployAgent() {
       const encodeResult = await encodeResp.json();
       fullCalldata = encodeResult.calldata;
       log(termDiv, 'info', `Executor: <a href='https://explorer.ritualfoundation.org/address/${encodeResult.executor}' target='_blank' class='tx-hash'>${encodeResult.executor}</a>`);
+      const cliTypeLabel = document.querySelector('input[name="cli-type"]:checked')?.value === '5' ? 'Crush' : 'ZeroClaw';
+      log(termDiv, 'info', `CLI Runtime: ${cliTypeLabel} (type ${document.querySelector('input[name="cli-type"]:checked')?.value || '6'})`);
       log(termDiv, 'info', `Secrets: ${encodeResult.encryptedSize} bytes | Calldata: ${encodeResult.calldataSize} bytes`);
     } catch (encodeErr) {
       throw new Error(`Calldata encoding failed: ${encodeErr.message}`);
@@ -2176,6 +2196,7 @@ function generateEnv() {
   const schedulerTtl = document.getElementById('d-schedttl').value || '500';
   const fund = document.getElementById('d-fund').value;
   const lockBlocks = document.getElementById('d-lockduration').value;
+  const cliType = document.querySelector('input[name="cli-type"]:checked')?.value || '6';
 
   const apiKeyName = provider_name === 'openrouter' ? 'OPENROUTER_API_KEY' : provider_name === 'openai' ? 'OPENAI_API_KEY' : provider_name === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'GEMINI_API_KEY';
 
@@ -2203,7 +2224,7 @@ AGENT_PROMPT=${prompt || ''}
 
 # ── Deployment Config ───────────────────────────────
 SALT=${salt}
-CLI_TYPE=6
+CLI_TYPE=${cliType}
 FREQUENCY=${freq}
 WINDOW_NUM_CALLS=${windowCalls}
 SCHEDULER_TTL=${schedulerTtl}
