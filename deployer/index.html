@@ -278,7 +278,14 @@
             </div>
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Model</label>
-              <select id="d-model" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></select>
+              <div class="flex gap-2">
+                <select id="d-model" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></select>
+                <button onclick="simulateLLM()" id="llm-test-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs flex-shrink-0 flex items-center gap-1" title="Test this provider + model">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  Test
+                </button>
+              </div>
+              <div id="llm-test-result" class="hidden mt-1.5 rounded-lg px-2.5 py-1.5 text-xs"></div>
             </div>
           </div>
         </div>
@@ -939,6 +946,124 @@ function updateModelOptions() {
   const sel = document.getElementById('d-model');
   sel.innerHTML = MODELS[p].map(m => `<option value="${m}">${m}</option>`).join('');
   document.getElementById('apikey-group').style.display = p === 'native' ? 'none' : '';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LLM SIMULATION — test provider + model before deploy
+// ═══════════════════════════════════════════════════════════
+async function simulateLLM() {
+  const provider = document.getElementById('d-provider').value;
+  const model = document.getElementById('d-model').value;
+  const apiKey = document.getElementById('d-apikey')?.value.trim();
+  const btn = document.getElementById('llm-test-btn');
+  const resultDiv = document.getElementById('llm-test-result');
+
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity=".25"/><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" opacity=".75"/></svg> Testing...';
+  resultDiv.classList.remove('hidden');
+  resultDiv.style.background = 'rgba(180,158,255,0.08)';
+  resultDiv.style.border = '1px solid rgba(180,158,255,0.2)';
+  resultDiv.innerHTML = `<span class="text-slate-400">Testing ${provider}/${model}...</span>`;
+
+  const start = Date.now();
+
+  try {
+    if (provider === 'native') {
+      // Test Ritual RPC reachability
+      const rpc = new ethers.JsonRpcProvider(RITUAL_RPC);
+      const blockNum = await rpc.getBlockNumber();
+      const elapsed = Date.now() - start;
+      resultDiv.innerHTML = `<span style="color:#b49eff">✓ Ritual RPC live — block #${blockNum.toLocaleString()} — ${elapsed}ms</span>`;
+      resultDiv.style.background = 'rgba(180,158,255,0.1)';
+      resultDiv.style.border = '1px solid rgba(180,158,255,0.3)';
+    } else if (provider === 'openrouter') {
+      if (!apiKey) throw new Error('Enter API key first');
+      // Minimal chat call — 1 token to verify key + model
+      const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 })
+      });
+      const elapsed = Date.now() - start;
+      if (resp.ok) {
+        const data = await resp.json();
+        const tokens = data.usage?.total_tokens || '?';
+        resultDiv.innerHTML = `<span style="color:#b49eff">✓ Model responding — ${tokens} tokens — ${elapsed}ms</span>`;
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        const msg = err.error?.message || `HTTP ${resp.status}`;
+        resultDiv.innerHTML = `<span class="text-red-400">✗ ${msg}</span>`;
+        resultDiv.style.background = 'rgba(239,68,68,0.08)';
+        resultDiv.style.border = '1px solid rgba(239,68,68,0.2)';
+      }
+    } else if (provider === 'openai') {
+      if (!apiKey) throw new Error('Enter API key first');
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 })
+      });
+      const elapsed = Date.now() - start;
+      if (resp.ok) {
+        const data = await resp.json();
+        const tokens = data.usage?.total_tokens || '?';
+        resultDiv.innerHTML = `<span style="color:#b49eff">✓ Model responding — ${tokens} tokens — ${elapsed}ms</span>`;
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        const msg = err.error?.message || `HTTP ${resp.status}`;
+        resultDiv.innerHTML = `<span class="text-red-400">✗ ${msg}</span>`;
+        resultDiv.style.background = 'rgba(239,68,68,0.08)';
+        resultDiv.style.border = '1px solid rgba(239,68,68,0.2)';
+      }
+    } else if (provider === 'anthropic') {
+      if (!apiKey) throw new Error('Enter API key first');
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'hi' }], max_tokens: 1 })
+      });
+      const elapsed = Date.now() - start;
+      if (resp.ok) {
+        const data = await resp.json();
+        const tokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+        resultDiv.innerHTML = `<span style="color:#b49eff">✓ Model responding — ${tokens} tokens — ${elapsed}ms</span>`;
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        const msg = err.error?.message || `HTTP ${resp.status}`;
+        resultDiv.innerHTML = `<span class="text-red-400">✗ ${msg}</span>`;
+        resultDiv.style.background = 'rgba(239,68,68,0.08)';
+        resultDiv.style.border = '1px solid rgba(239,68,68,0.2)';
+      }
+    } else if (provider === 'gemini') {
+      if (!apiKey) throw new Error('Enter API key first');
+      const geminiModel = model.includes('/') ? model.split('/').pop() : model;
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }], generationConfig: { maxOutputTokens: 1 } })
+      });
+      const elapsed = Date.now() - start;
+      if (resp.ok) {
+        const data = await resp.json();
+        const tokens = data.usageMetadata?.totalTokenCount || '?';
+        resultDiv.innerHTML = `<span style="color:#b49eff">✓ Model responding — ${tokens} tokens — ${elapsed}ms</span>`;
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        const msg = err.error?.message || `HTTP ${resp.status}`;
+        resultDiv.innerHTML = `<span class="text-red-400">✗ ${msg}</span>`;
+        resultDiv.style.background = 'rgba(239,68,68,0.08)';
+        resultDiv.style.border = '1px solid rgba(239,68,68,0.2)';
+      }
+    }
+  } catch (err) {
+    const elapsed = Date.now() - start;
+    resultDiv.innerHTML = `<span class="text-red-400">✗ ${err.message} — ${elapsed}ms</span>`;
+    resultDiv.style.background = 'rgba(239,68,68,0.08)';
+    resultDiv.style.border = '1px solid rgba(239,68,68,0.2)';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Test';
+  }
 }
 
 function loadTemplate(name) {
