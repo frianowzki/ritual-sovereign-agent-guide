@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth" style="height:auto">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,7 +21,7 @@
     :root { --ritual-green: #57d36b; --ritual-dark: #000; }
     * { scrollbar-width: none; -ms-overflow-style: none; }
     *::-webkit-scrollbar { display: none; }
-    body { font-family: 'Inter', sans-serif; background: var(--ritual-dark); color: #e2e8f0; overflow: hidden; }
+    body { font-family: 'Inter', sans-serif; background: var(--ritual-dark); color: #e2e8f0; overflow-x: hidden; overflow-y: auto; min-height: 100dvh; }
     code, .mono { font-family: 'JetBrains Mono', monospace; }
     .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
     .glass-strong { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
@@ -60,7 +60,7 @@
     ::selection { background: rgba(87,211,107,0.3); color: #fff; }
   </style>
 </head>
-<body class="min-h-screen md:h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
 <!-- Header -->
 <header class="border-b border-white/5 px-4 md:px-6 py-2 md:py-3 flex-shrink-0" style="border-image:linear-gradient(90deg,transparent,#57d36b,transparent) 1">
@@ -76,7 +76,7 @@
 </header>
 
 <!-- Main -->
-<main class="max-w-5xl mx-auto px-4 md:px-6 py-4 flex-1 w-full overflow-y-auto flex flex-col">
+<main class="max-w-5xl mx-auto px-4 md:px-6 py-4 w-full flex flex-col">
 
   <!-- Hero -->
   <div class="text-center mb-4">
@@ -109,7 +109,7 @@
   </div>
 
   <!-- ═══════════════ DEPLOY TAB ═══════════════ -->
-  <div id="panel-deploy" class="fade-in flex-1 overflow-hidden">
+  <div id="panel-deploy" class="fade-in flex-1 overflow-y-auto">
     <div class="grid md:grid-cols-2 gap-3">
 
       <!-- Left: Config -->
