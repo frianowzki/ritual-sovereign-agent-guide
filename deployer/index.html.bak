@@ -18,23 +18,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root { --ritual-green: #b49eff; --ritual-dark: #000; }
+    :root { --ritual-green: #57d36b; --ritual-dark: #000; }
     * { scrollbar-width: none; -ms-overflow-style: none; }
     *::-webkit-scrollbar { display: none; }
     body { font-family: 'Inter', sans-serif; background: var(--ritual-dark); color: #e2e8f0; overflow-x: hidden; overflow-y: auto; min-height: 100dvh; }
     code, .mono { font-family: 'JetBrains Mono', monospace; }
     .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
     .glass-strong { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-    .tab-active { border-bottom: 2px solid #b49eff; color: #b49eff; }
+    .tab-active { border-bottom: 2px solid #57d36b; color: #57d36b; }
     .tab-inactive { border-bottom: 2px solid transparent; color: #64748b; }
     .tab-inactive:hover { color: #94a3b8; }
     input, select, textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #e2e8f0 !important; }
-    input:focus, select:focus, textarea:focus { border-color: #b49eff !important; outline: none; box-shadow: 0 0 0 2px rgba(180,158,255,0.15); }
-    .btn-primary { background: linear-gradient(135deg, #b49eff, #9f8ae8); color: #000; font-weight: 600; }
-    .btn-primary:hover { background: linear-gradient(135deg, #9f8ae8, #7c6bc4); }
+    input:focus, select:focus, textarea:focus { border-color: #57d36b !important; outline: none; box-shadow: 0 0 0 2px rgba(57,255,20,0.15); }
+    .btn-primary { background: linear-gradient(135deg, #57d36b, #3da854); color: #000; font-weight: 600; }
+    .btn-primary:hover { background: linear-gradient(135deg, #3da854, #2d7a3e); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-outline { border: 1px solid rgba(180,158,255,0.4); color: #b49eff; }
-    .btn-outline:hover { background: rgba(180,158,255,0.1); }
+    .btn-outline { border: 1px solid rgba(57,255,20,0.4); color: #57d36b; }
+    .btn-outline:hover { background: rgba(57,255,20,0.1); }
     .fade-in { animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
@@ -50,14 +50,14 @@
     #terminal .info, .terminal .info { color: #58a6ff; }
     #terminal .warn, .terminal .warn { color: #d29922; }
     .step-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
-    .step-active { background: #b49eff; color: #000; }
+    .step-active { background: #57d36b; color: #000; }
     .step-done { background: #059669; color: white; }
     .step-pending { background: rgba(255,255,255,0.1); color: #64748b; }
-    .progress-bar { height: 3px; background: rgba(180,158,255,0.15); border-radius: 2px; overflow: hidden; }
-    .progress-fill { height: 100%; background: #b49eff; border-radius: 2px; transition: width 0.3s; }
+    .progress-bar { height: 3px; background: rgba(57,255,20,0.15); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #57d36b; border-radius: 2px; transition: width 0.3s; }
     select option { background: #0a0a0f; color: #e2e8f0; }
-    select { color-scheme: dark; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%23b49eff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 32px !important; }
-    ::selection { background: rgba(180,158,255,0.3); color: #fff; }
+    select { color-scheme: dark; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%2357d36b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 32px !important; }
+    ::selection { background: rgba(87,211,107,0.3); color: #fff; }
 
     /* ═══ GOOEY INPUT ═══ */
     .gooey-wrap { position: relative; width: 100%; height: 56px; overflow: visible; }
@@ -69,10 +69,10 @@
       top: 6px; left: 0;
       opacity: 0.55;
     }
-    .gooey-blob-1 { background: #b49eff; animation: blobOrbit1 8s ease-in-out infinite; }
-    .gooey-blob-2 { background: #9f8ae8; animation: blobOrbit2 6s ease-in-out infinite; width: 36px; height: 36px; }
-    .gooey-blob-3 { background: #7c6bc4; animation: blobOrbit3 10s ease-in-out infinite; width: 30px; height: 30px; }
-    .gooey-blob-4 { background: rgba(180,158,255,0.4); animation: blobOrbit4 7s ease-in-out infinite; width: 26px; height: 26px; }
+    .gooey-blob-1 { background: #57d36b; animation: blobOrbit1 8s ease-in-out infinite; }
+    .gooey-blob-2 { background: #3da854; animation: blobOrbit2 6s ease-in-out infinite; width: 36px; height: 36px; }
+    .gooey-blob-3 { background: #2d7a3e; animation: blobOrbit3 10s ease-in-out infinite; width: 30px; height: 30px; }
+    .gooey-blob-4 { background: rgba(87,211,107,0.4); animation: blobOrbit4 7s ease-in-out infinite; width: 26px; height: 26px; }
     @keyframes blobOrbit1 {
       0% { transform: translate(0, 10px) scale(1); }
       20% { transform: translate(80px, -8px) scale(1.15); }
@@ -105,7 +105,7 @@
       position: absolute; inset: 0; z-index: 2; overflow: hidden;
       width: 100%; height: 100%;
       background: rgba(10, 10, 15, 0.75) !important;
-      border: 1px solid rgba(180,158,255,0.25) !important;
+      border: 1px solid rgba(87,211,107,0.25) !important;
       border-radius: 16px;
       padding: 0 16px 0 44px;
       font-size: 14px;
@@ -116,94 +116,35 @@
     }
     .gooey-input-field::placeholder { color: #475569; font-family: 'Inter', sans-serif; }
     .gooey-input-field:focus {
-      border-color: #b49eff !important;
-      box-shadow: 0 0 0 3px rgba(180,158,255,0.12), 0 0 30px rgba(180,158,255,0.08);
+      border-color: #57d36b !important;
+      box-shadow: 0 0 0 3px rgba(87,211,107,0.12), 0 0 30px rgba(87,211,107,0.08);
     }
     .gooey-search-icon {
       position: absolute; z-index: 3; top: 50%; left: 14px;
       transform: translateY(-50%);
-      width: 18px; height: 18px; color: #b49eff; opacity: 0.7;
+      width: 18px; height: 18px; color: #57d36b; opacity: 0.7;
       pointer-events: none;
     }
     .gooey-submit {
       position: absolute; z-index: 3; top: 50%; right: 8px;
       transform: translateY(-50%);
-      background: linear-gradient(135deg, #b49eff, #9f8ae8);
+      background: linear-gradient(135deg, #57d36b, #3da854);
       color: #000; border: none; border-radius: 12px;
       padding: 8px 18px; font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.2s;
     }
-    .gooey-submit:hover { background: linear-gradient(135deg, #9f8ae8, #7c6bc4); transform: translateY(-50%) scale(1.03); }
+    .gooey-submit:hover { background: linear-gradient(135deg, #3da854, #2d7a3e); transform: translateY(-50%) scale(1.03); }
     .gooey-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: translateY(-50%); }
-
-    /* ═══ WAVY BACKGROUND ═══ */
-    .wavy-bg {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: 45vh;
-      z-index: 0; pointer-events: none; opacity: 0.5;
-    }
-    .wavy-bg svg { position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; }
-    .wavy-layer-1 { animation: waveScroll 25s linear infinite; }
-    .wavy-layer-2 { animation: waveScroll 18s linear infinite reverse; opacity: 0.6; }
-    .wavy-layer-3 { animation: waveScroll 30s linear infinite; opacity: 0.35; }
-    @keyframes waveScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    /* ═══ ENCRYPTED TEXT ═══ */
-    .encrypted-text {
-      font-family: 'Inter', sans-serif;
-      font-size: 2rem; font-weight: 800;
-      letter-spacing: -0.03em; line-height: 1.1;
-      background: linear-gradient(135deg, #c9b8ff, #b49eff, #d4b8ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .encrypted-char {
-      display: inline-block;
-      min-width: 0.55em;
-      transition: color 0.1s;
-    }
-    .encrypted-char.scrambling {
-      -webkit-text-fill-color: #b49eff;
-      animation: charFlicker 0.08s infinite;
-    }
-    @keyframes charFlicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    @media (max-width: 640px) {
-      .encrypted-text { font-size: 1.5rem; }
-    }
-
-    /* ═══ MAIN CONTENT Z-INDEX ═══ */
-    main, header, footer { position: relative; z-index: 1; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-<!-- ═══ WAVY BACKGROUND ═══ -->
-<div class="wavy-bg">
-  <svg class="wavy-layer-1" viewBox="0 0 1440 320" preserveAspectRatio="none">
-    <path fill="rgba(180,158,255,0.15)" d="M0,160L48,170.7C96,181,192,203,288,208C384,213,480,203,576,186.7C672,171,768,149,864,154.7C960,160,1056,192,1152,197.3C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
-    <path fill="rgba(180,158,255,0.15)" d="M1440,160L1392,170.7C1344,181,1248,203,1152,208C1056,213,960,203,864,186.7C768,171,672,149,576,154.7C480,160,384,192,288,197.3C192,203,96,181,48,170.7L0,160L0,320L48,320C96,320,192,320,288,320C384,320,480,320,576,320C672,320,768,320,864,320C960,320,1056,320,1152,320C1248,320,1344,320,1392,320L1440,320Z"/>
-  </svg>
-  <svg class="wavy-layer-2" viewBox="0 0 1440 320" preserveAspectRatio="none">
-    <path fill="rgba(159,138,232,0.12)" d="M0,224L48,213.3C96,203,192,181,288,186.7C384,192,480,224,576,234.7C672,245,768,235,864,213.3C960,192,1056,160,1152,165.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
-    <path fill="rgba(159,138,232,0.12)" d="M1440,256L1392,234.7C1344,213,1248,171,1152,165.3C1056,160,960,192,864,213.3C768,235,672,245,576,234.7C480,224,384,192,288,186.7C192,181,96,203,48,213.3L0,224L0,320L48,320C96,320,192,320,288,320C384,320,480,320,576,320C672,320,768,320,864,320C960,320,1056,320,1152,320C1248,320,1344,320,1392,320L1440,320Z"/>
-  </svg>
-  <svg class="wavy-layer-3" viewBox="0 0 1440 320" preserveAspectRatio="none">
-    <path fill="rgba(212,184,255,0.1)" d="M0,288L48,272C96,256,192,224,288,213.3C384,203,480,213,576,229.3C672,245,768,267,864,261.3C960,256,1056,224,1152,213.3C1248,203,1344,213,1392,218.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
-    <path fill="rgba(212,184,255,0.1)" d="M1440,224L1392,218.7C1344,213,1248,203,1152,213.3C1056,224,960,256,864,261.3C768,267,672,245,576,229.3C480,213,384,203,288,213.3C192,224,96,256,48,272L0,288L0,320L48,320C96,320,192,320,288,320C384,320,480,320,576,320C672,320,768,320,864,320C960,320,1056,320,1152,320C1248,320,1344,320,1392,320L1440,320Z"/>
-  </svg>
-</div>
-
 <!-- Header -->
-<header class="border-b border-white/5 px-4 md:px-6 py-2 md:py-3 flex-shrink-0" style="border-image:linear-gradient(90deg,transparent,#b49eff,transparent) 1">
+<header class="border-b border-white/5 px-4 md:px-6 py-2 md:py-3 flex-shrink-0" style="border-image:linear-gradient(90deg,transparent,#57d36b,transparent) 1">
   <div class="max-w-5xl mx-auto flex items-center justify-between">
     <div></div>
     <div class="flex items-center gap-3">
-      <span id="wallet-balance-badge" class="hidden text-xs px-3 py-1 rounded-full mono" style="background:rgba(180,158,255,0.1);color:#b49eff"></span>
+      <span id="wallet-balance-badge" class="hidden text-xs px-3 py-1 rounded-full mono" style="background:rgba(57,255,20,0.1);color:#57d36b"></span>
       <a href="https://github.com/frianowzki/ritual-sovereign-agent-guide" target="_blank" class="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
       </a>
@@ -216,7 +157,7 @@
 
   <!-- Hero -->
   <div class="text-center mb-4">
-    <h1 id="hero-title" class="encrypted-text" data-text="Let the Ritual Begin">Let the Ritual Begin</h1>
+    <h1 class="text-2xl font-bold" style="background:linear-gradient(135deg,#57d36b,#57d36b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Let the Ritual Begin</h1>
     <p class="text-slate-500 text-xs">Autonomous AI agents on Ritual Chain.</p>
   </div>
 
@@ -258,7 +199,7 @@
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">1</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">LLM Provider</h3>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">LLM Provider</h3>
           </div>
           <div class="space-y-2">
             <div>
@@ -287,13 +228,13 @@
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">2</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">HuggingFace</h3>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">HuggingFace</h3>
           </div>
           <div class="space-y-2">
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Dataset (username/repo-name)</label>
               <input id="d-hfrepo" type="text" placeholder="myname/agent-data" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-              <a href="https://huggingface.co/new-dataset" target="_blank" class="text-xs mt-1 inline-block" style="color:#b49eff">Create dataset</a>
+              <a href="https://huggingface.co/new-dataset" target="_blank" class="text-xs mt-1 inline-block" style="color:#57d36b">Create dataset</a>
             </div>
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Token (write access)</label>
@@ -317,7 +258,7 @@
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">3</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">TEE Executor</h3>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">TEE Executor</h3>
             <button onclick="refreshExecutors()" class="btn-outline rounded-lg px-2 py-0.5 text-xs ml-auto" id="executor-refresh-btn">Refresh</button>
           </div>
           <div class="space-y-2">
@@ -328,7 +269,7 @@
               </select>
               <p id="executor-count" class="text-xs text-slate-500 mt-1"></p>
             </div>
-            <div id="executor-details" class="hidden rounded-lg px-3 py-2 border" style="background:rgba(180,158,255,0.08);border-color:rgba(180,158,255,0.2)">
+            <div id="executor-details" class="hidden rounded-lg px-3 py-2 border" style="background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.2)">
               <div class="space-y-1 text-xs">
                 <div class="flex justify-between">
                   <span class="text-slate-400">TEE Address</span>
@@ -355,7 +296,7 @@
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">4</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">Agent Config</h3>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">Agent Config</h3>
           </div>
           <div class="space-y-2">
             <div>
@@ -385,7 +326,7 @@
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">5</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">Schedule & Budget</h3>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">Schedule & Budget</h3>
           </div>
           <div class="space-y-2">
             <div>
@@ -418,10 +359,10 @@
               <input id="d-schedttl" type="number" value="500" step="100" min="100" max="10000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" onchange="validateSchedule()" />
             </div>
             <!-- Live schedule validation -->
-            <div id="schedule-validation" class="rounded-lg px-3 py-2 border" style="background:rgba(180,158,255,0.08);border-color:rgba(180,158,255,0.2)">
+            <div id="schedule-validation" class="rounded-lg px-3 py-2 border" style="background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.2)">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-400">Total: freq × calls</span>
-                <span id="sched-total" class="font-semibold" style="color:#b49eff"></span>
+                <span id="sched-total" class="font-semibold" style="color:#57d36b"></span>
               </div>
               <div class="flex items-center justify-between text-xs mt-0.5">
                 <span class="text-slate-400">Status</span>
@@ -504,7 +445,7 @@
             </details>
 
             <!-- Cost estimate -->
-            <div class="rounded-lg px-3 py-2 border" style="background:rgba(180,158,255,0.08);border-color:rgba(180,158,255,0.2)">
+            <div class="rounded-lg px-3 py-2 border" style="background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.2)">
               <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs">
                 <span class="text-slate-400">Deploy: ~0.02</span>
                 <span class="text-slate-400">Fund: <span id="est-fund">0.25</span></span>
@@ -522,7 +463,7 @@
         <!-- Progress -->
         <div id="deploy-progress" class="hidden glass rounded-xl p-3">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xs font-semibold" style="color:#b49eff">Deploy Progress</h3>
+            <h3 class="text-xs font-semibold" style="color:#57d36b">Deploy Progress</h3>
             <span id="deploy-step-label" class="text-xs text-slate-500">Step 1/3</span>
           </div>
           <div class="progress-bar mb-3">
@@ -552,7 +493,7 @@
 
       <!-- Deposit to RitualWallet -->
       <div class="glass rounded-xl p-2 md:p-3">
-        <h3 class="text-xs font-semibold mb-3" style="color:#b49eff">Deposit to RitualWallet</h3>
+        <h3 class="text-xs font-semibold mb-3" style="color:#57d36b">Deposit to RitualWallet</h3>
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
@@ -861,8 +802,8 @@ function startBalancePolling() {
       if (badge) {
         const prev = badge.dataset.prev || '';
         if (prev && prev !== balFmt) {
-          badge.style.background = 'rgba(180,158,255,0.3)';
-          setTimeout(() => { badge.style.background = 'rgba(180,158,255,0.1)'; }, 400);
+          badge.style.background = 'rgba(57,255,20,0.3)';
+          setTimeout(() => { badge.style.background = 'rgba(57,255,20,0.1)'; }, 400);
         }
         badge.textContent = `${balFmt} RITUAL`;
         badge.dataset.prev = balFmt;
@@ -946,8 +887,8 @@ function validateSchedule() {
   } else {
     statusEl.textContent = 'Safe range';
     statusEl.className = 'font-semibold';
-    statusEl.style.color = '#b49eff';
-    totalEl.style.color = '#b49eff';
+    statusEl.style.color = '#57d36b';
+    totalEl.style.color = '#57d36b';
   }
 }
 
@@ -1302,7 +1243,7 @@ async function checkStatusOnChain() {
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-slate-500">Balance</span>
-            <span style="color:#b49eff" class="font-semibold">${ethers.formatEther(balance)} RITUAL</span>
+            <span style="color:#57d36b" class="font-semibold">${ethers.formatEther(balance)} RITUAL</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-slate-500">Lock Until</span>
@@ -1378,7 +1319,7 @@ async function runSmokeTest() {
     });
     
     if (hfResp.ok) {
-      results.push('<span style="color:#b49eff">✓ HF dataset accessible</span>');
+      results.push('<span style="color:#57d36b">✓ HF dataset accessible</span>');
     } else if (hfResp.status === 401) {
       results.push('<span class="text-red-400">✗ HF token invalid or expired</span>');
     } else if (hfResp.status === 404) {
@@ -1390,7 +1331,7 @@ async function runSmokeTest() {
     // Test 2: LLM key (skip for native)
     const provider = document.getElementById('d-provider').value;
     if (provider === 'native') {
-      results.push('<span style="color:#b49eff">✓ Ritual Native (no key needed)</span>');
+      results.push('<span style="color:#57d36b">✓ Ritual Native (no key needed)</span>');
     } else {
       const apiKey = document.getElementById('d-apikey').value.trim();
       resultDiv.innerHTML = '<span class="text-slate-400">Testing LLM API key...</span>';
@@ -1400,7 +1341,7 @@ async function runSmokeTest() {
           headers: { 'Authorization': `Bearer ${apiKey}` }
         });
         if (orResp.ok) {
-          results.push('<span style="color:#b49eff">✓ OpenRouter key valid</span>');
+          results.push('<span style="color:#57d36b">✓ OpenRouter key valid</span>');
         } else if (orResp.status === 401) {
           results.push('<span class="text-red-400">✗ OpenRouter key invalid</span>');
         } else {
@@ -1415,7 +1356,7 @@ async function runSmokeTest() {
         };
         const prefixes = validPrefixes[provider] || [];
         if (prefixes.some(p => apiKey.startsWith(p))) {
-          results.push(`<span style="color:#b49eff">✓ ${provider} key format valid</span>`);
+          results.push(`<span style="color:#57d36b">✓ ${provider} key format valid</span>`);
         } else {
           results.push(`<span class="text-yellow-400">⚠ ${provider} key format unexpected — will be tested on-chain</span>`);
         }
@@ -1423,11 +1364,11 @@ async function runSmokeTest() {
     }
     
     // Show results
-    const allPassed = results.every(r => r.includes('color:#b49eff') || r.includes('✓'));
+    const allPassed = results.every(r => r.includes('color:#57d36b') || r.includes('✓'));
     smokeTestPassed = allPassed;
     
-    resultDiv.style.background = allPassed ? 'rgba(180,158,255,0.1)' : 'rgba(239,68,68,0.1)';
-    resultDiv.style.border = allPassed ? '1px solid rgba(180,158,255,0.3)' : '1px solid rgba(239,68,68,0.3)';
+    resultDiv.style.background = allPassed ? 'rgba(57,255,20,0.1)' : 'rgba(239,68,68,0.1)';
+    resultDiv.style.border = allPassed ? '1px solid rgba(57,255,20,0.3)' : '1px solid rgba(239,68,68,0.3)';
     resultDiv.innerHTML = results.join('<br>');
     
     smokeTestPassed = allPassed;
@@ -1465,7 +1406,7 @@ async function updateExecutorHealth() {
     let color, label;
     
     if (count > 5) {
-      color = '#b49eff';
+      color = '#57d36b';
       label = `${count} active executors`;
     } else if (count >= 3) {
       color = '#eab308';
@@ -1613,68 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ═══ ENCRYPTED TEXT HERO ═══
-  initEncryptedText();
-
 });
-
-// ═══════════════════════════════════════════════════════════
-//  ENCRYPTED TEXT — Aceternity-style character scramble
-// ═══════════════════════════════════════════════════════════
-function initEncryptedText() {
-  const el = document.getElementById('hero-title');
-  if (!el) return;
-  const finalText = el.getAttribute('data-text') || el.textContent;
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,./<>?~`';
-  const totalDuration = 1800;
-  const frameInterval = 40;
-  const totalFrames = Math.ceil(totalDuration / frameInterval);
-
-  // Wrap each character in a span
-  el.innerHTML = '';
-  const spans = [];
-  for (let i = 0; i < finalText.length; i++) {
-    const span = document.createElement('span');
-    span.className = 'encrypted-char';
-    if (finalText[i] === ' ') {
-      span.innerHTML = '&nbsp;';
-      span.style.minWidth = '0.3em';
-    } else {
-      span.textContent = chars[Math.floor(Math.random() * chars.length)];
-      span.classList.add('scrambling');
-    }
-    el.appendChild(span);
-    spans.push({ span, final: finalText[i], isSpace: finalText[i] === ' ' });
-  }
-
-  // Calculate per-char delay based on position (left to right reveal)
-  let frame = 0;
-  const timer = setInterval(() => {
-    frame++;
-    const progress = frame / totalFrames;
-    for (let i = 0; i < spans.length; i++) {
-      const { span, final, isSpace } = spans[i];
-      if (isSpace) continue;
-      // Each char starts scrambling at a staggered time
-      const charStart = (i / spans.length) * 0.6;
-      const charEnd = charStart + 0.4;
-      if (progress >= charEnd) {
-        span.textContent = final;
-        span.classList.remove('scrambling');
-      } else if (progress >= charStart) {
-        span.textContent = chars[Math.floor(Math.random() * chars.length)];
-      }
-    }
-    if (frame >= totalFrames) {
-      clearInterval(timer);
-      // Ensure all chars are final
-      for (const { span, final } of spans) {
-        span.textContent = final;
-        span.classList.remove('scrambling');
-      }
-    }
-  }, frameInterval);
-}
 
 function randomizeSalt() {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -1939,7 +1819,7 @@ async function loadMyAgents() {
         2: { label: 'Configuring', color: '#eab308' },
         3: { label: 'Configuring', color: '#eab308' },
         4: { label: 'Configured', color: '#3b82f6' },
-        5: { label: 'Armed', color: '#b49eff' },
+        5: { label: 'Armed', color: '#57d36b' },
       };
       const stateInfo = stateMap[rawState] || { label: `State ${rawState}`, color: '#8b5cf6' };
       
