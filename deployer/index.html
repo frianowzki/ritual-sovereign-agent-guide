@@ -313,10 +313,36 @@
           </div>
         </div>
 
-        <!-- Step 2.5: Executor Selection -->
+        <!-- Step 3: Agent Config -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">3</div>
+            <h3 class="text-xs font-semibold" style="color:#b49eff">Agent Config</h3>
+          </div>
+          <div class="space-y-2">
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">Salt (unique per agent)</label>
+              <div class="flex gap-2">
+                <input id="d-salt" type="text" value="my-sovereign-agent" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                <button onclick="randomizeSalt()" class="btn-outline rounded-lg px-3 py-2 text-sm flex-shrink-0" title="Randomize salt"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg></button>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">Agent Prompt</label>
+              <div class="flex gap-2 mb-1">
+                <button onclick="loadTemplate('default')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Default</button>
+                <button onclick="loadTemplate('market')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Market</button>
+                <button onclick="loadTemplate('research')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Research</button>
+              </div>
+              <textarea id="d-prompt" rows="3" placeholder="You are a sovereign AI agent on Ritual Chain..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2.5: Executor Selection -->
+        <div class="glass rounded-xl p-2 md:p-3">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="step-badge step-active">4</div>
             <h3 class="text-xs font-semibold" style="color:#b49eff">TEE Executor</h3>
             <button onclick="refreshExecutors()" class="btn-outline rounded-lg px-2 py-0.5 text-xs ml-auto" id="executor-refresh-btn">Refresh</button>
           </div>
@@ -347,32 +373,6 @@
                   <span id="exec-teetype" class="text-slate-300"></span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 4: Agent Config -->
-        <div class="glass rounded-xl p-2 md:p-3">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">4</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">Agent Config</h3>
-          </div>
-          <div class="space-y-2">
-            <div>
-              <label class="text-xs text-slate-500 mb-1 block">Salt (unique per agent)</label>
-              <div class="flex gap-2">
-                <input id="d-salt" type="text" value="my-sovereign-agent" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-                <button onclick="randomizeSalt()" class="btn-outline rounded-lg px-3 py-2 text-sm flex-shrink-0" title="Randomize salt"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg></button>
-              </div>
-            </div>
-            <div>
-              <label class="text-xs text-slate-500 mb-1 block">Agent Prompt</label>
-              <div class="flex gap-2 mb-1">
-                <button onclick="loadTemplate('default')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Default</button>
-                <button onclick="loadTemplate('market')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Market</button>
-                <button onclick="loadTemplate('research')" class="btn-outline rounded-lg px-2 py-0.5 text-xs">Research</button>
-              </div>
-              <textarea id="d-prompt" rows="3" placeholder="You are a sovereign AI agent on Ritual Chain..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></textarea>
             </div>
           </div>
         </div>
