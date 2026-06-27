@@ -815,14 +815,14 @@ async function deployAgent() {
       log(termDiv, 'cmd', 'Waiting for confirmation...');
 
       let receipt = null;
-      for (let i = 0; i < 60; i++) {
-        await new Promise(r => setTimeout(r, 2000));
+      for (let i = 0; i < 30; i++) {
+        await new Promise(r => setTimeout(r, 5000));
         try {
           const rawReceipt = await provider.send('eth_getTransactionReceipt', [tx.hash]);
           if (rawReceipt) { receipt = rawReceipt; break; }
         } catch(e) {}
       }
-      if (!receipt) throw new Error('deployHarness timed out');
+      if (!receipt) throw new Error('deployHarness timed out after 150s');
       const status = receipt.status === '0x1' || receipt.status === '0x01' || receipt.status === 1;
       if (!status) throw new Error('deployHarness reverted');
       log(termDiv, 'info', `Confirmed block ${parseInt(receipt.blockNumber, 16)}`);
@@ -912,30 +912,75 @@ async function deployAgent() {
     log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx2.hash}' target='_blank' class='tx-hash'>${tx2.hash}</a>`);
     log(termDiv, 'cmd', 'Waiting for confirmation...');
 
+    // Receipt: 30 attempts × 5s = 150s. On Ritual blocks are ~350ms, should confirm in 1-2 blocks.
     let receipt2 = null;
-    for (let i = 0; i < 60; i++) {
-      await new Promise(r => setTimeout(r, 2000));
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 5000));
       try {
         const rawReceipt = await provider.send('eth_getTransactionReceipt', [tx2.hash]);
         if (rawReceipt) { receipt2 = rawReceipt; break; }
       } catch(e) {}
     }
 
-    if (!receipt2) throw new Error('Transaction timed out');
+    if (!receipt2) throw new Error('Transaction timed out after 150s — check explorer manually');
     const status2 = receipt2.status === '0x1' || receipt2.status === '0x01' || receipt2.status === 1;
-    if (!status2) throw new Error('configureFundAndStart reverted');
+    if (!status2) throw new Error('configureFundAndStart reverted on-chain');
     log(termDiv, 'info', `Confirmed block ${parseInt(receipt2.blockNumber, 16)}`);
 
-    updateProgress(100, 'Complete');
-    log(termDiv, 'success', '═══════════════════════════════════════');
-    log(termDiv, 'success', `SOVEREIGN AGENT DEPLOYED`);
-    log(termDiv, 'success', `Harness: <a href='https://explorer.ritualfoundation.org/agents/${harnessAddr}' target='_blank' class='tx-hash'>${harnessAddr}</a>`);
-    log(termDiv, 'success', `Model: ${model} | Fund: ${fundAmount} RITUAL`);
-    log(termDiv, 'success', '═══════════════════════════════════════');
+    // ── Phase 2: Wait for async callback to complete ──
+    // configureFundAndStart has TWO phases:
+    //   Phase 1 (sync): TX mined, funds deposited — we just confirmed this
+    //   Phase 2 (async): TEE executor picks up job, encrypts secrets, configures agent
+    // Phase 2 can take 1-5 minutes. We poll configured() to detect it.
+    log(termDiv, 'cmd', 'TX confirmed. Waiting for TEE callback (async phase)...');
+    log(termDiv, 'info', 'This takes 1-5 min — the TEE executor must pick up and configure your agent.');
 
-    btn.innerHTML = 'Deployed!';
-    btn.classList.remove('btn-primary');
-    btn.classList.add('btn-outline');
+    updateProgress(95, 'Step 3/3 — Waiting for TEE callback');
+
+    let agentConfigured = false;
+    const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+
+    for (let i = 0; i < 60; i++) {  // 60 × 5s = 300s = 5 min max
+      await new Promise(r => setTimeout(r, 5000));
+      try {
+        const cfgResult = await rpcProvider.call({ to: harnessAddr, data: '0xf42a46d7' });
+        if (cfgResult.slice(66 - 2) === '01') {
+          agentConfigured = true;
+          break;
+        }
+      } catch(e) {}
+      // Progress feedback every 30s
+      if ((i + 1) % 6 === 0) {
+        log(termDiv, 'info', `Still waiting... (${Math.round((i + 1) * 5 / 60)} min elapsed)`);
+      }
+    }
+
+    if (!agentConfigured) {
+      // Callback didn't complete in 5 min — funds are deposited but agent unconfigured
+      updateProgress(100, 'Partial — needs manual restart');
+      log(termDiv, 'warn', '═══════════════════════════════════════');
+      log(termDiv, 'warn', 'TX confirmed but TEE callback did not complete in 5 min.');
+      log(termDiv, 'warn', 'Your funds are deposited. The agent is deployed but unconfigured.');
+      log(termDiv, 'warn', 'Go to Manage tab > Restart to trigger the callback again.');
+      log(termDiv, 'warn', '═══════════════════════════════════════');
+      log(termDiv, 'info', `Harness: <a href='https://explorer.ritualfoundation.org/agents/${harnessAddr}' target='_blank' class='tx-hash'>${harnessAddr}</a>`);
+
+      btn.innerHTML = 'Needs Restart';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-outline');
+    } else {
+      // Full success
+      updateProgress(100, 'Complete');
+      log(termDiv, 'success', '═══════════════════════════════════════');
+      log(termDiv, 'success', `SOVEREIGN AGENT DEPLOYED & CONFIGURED`);
+      log(termDiv, 'success', `Harness: <a href='https://explorer.ritualfoundation.org/agents/${harnessAddr}' target='_blank' class='tx-hash'>${harnessAddr}</a>`);
+      log(termDiv, 'success', `Model: ${model} | Fund: ${fundAmount} RITUAL`);
+      log(termDiv, 'success', '═══════════════════════════════════════');
+
+      btn.innerHTML = 'Deployed!';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-outline');
+    }
 
     // Save to localStorage for My Agents
     const agents = JSON.parse(localStorage.getItem('sr_agents') || '[]');
