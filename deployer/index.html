@@ -246,8 +246,8 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <label class="text-xs text-slate-500 mb-1 block">Fund Amount (RITUAL)</label>
-                  <input id="d-fund" type="number" value="0.15" step="0.01" min="0.15" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-                  <p class="text-xs text-red-400 mt-0.5">Minimum 0.15</p>
+                  <input id="d-fund" type="number" value="0.1" step="0.01" min="0.1" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                  <p class="text-xs text-red-400 mt-0.5">Minimum 0.1</p>
                 </div>
                 <div>
                   <label class="text-xs text-slate-500 mb-1 block">Max Budget (RITUAL)</label>
@@ -319,8 +319,8 @@
             <div class="rounded-lg px-3 py-2 border" style="background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.2)">
               <div class="flex flex-wrap items-center gap-2 md:gap-3 text-xs">
                 <span class="text-slate-400">Deploy: ~0.02</span>
-                <span class="text-slate-400">Fund: <span id="est-fund">0.15</span></span>
-                <span class="text-white font-semibold">Total: ~<span id="est-total">0.17</span> RITUAL</span>
+                <span class="text-slate-400">Fund: <span id="est-fund">0.1</span></span>
+                <span class="text-white font-semibold">Total: ~<span id="est-total">0.12</span> RITUAL</span>
               </div>
             </div>
           </div>
@@ -386,26 +386,26 @@
 
       <!-- Restart Agent -->
       <div class="glass rounded-xl p-2 md:p-3">
-        <h3 class="text-xs font-semibold mb-3" style="color:#eab308">Restart Agent</h3>
+        <h3 class="text-xs font-semibold mb-3" style="color:#eab308">Restart / Reconfigure</h3>
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
             <input id="m-restart-agent" type="text" placeholder="0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
-          <button onclick="restartAgent()" id="restart-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#eab308,#f59e0b)">Restart Agent</button>
+          <button onclick="restartAgent()" id="restart-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#eab308,#f59e0b)">Check & Restart</button>
         </div>
         <div id="restart-terminal" class="terminal rounded-lg p-2 text-xs mono max-h-32 overflow-y-auto mt-2 hidden"></div>
       </div>
 
       <!-- Stop Agent -->
       <div class="glass rounded-xl p-2 md:p-3">
-        <h3 class="text-xs font-semibold mb-3" style="color:#ef4444">Stop Agent</h3>
+        <h3 class="text-xs font-semibold mb-3" style="color:#ef4444">Stop / Status</h3>
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
             <input id="m-stop-agent" type="text" placeholder="0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
-          <button onclick="stopAgent()" id="stop-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Stop Agent</button>
+          <button onclick="stopAgent()" id="stop-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Check Status</button>
         </div>
         <div id="stop-terminal" class="terminal rounded-lg p-2 text-xs mono max-h-32 overflow-y-auto mt-2 hidden"></div>
       </div>
@@ -762,8 +762,8 @@ async function deployAgent() {
     alert(`Schedule too aggressive: ${freq} × ${windowCalls} = ${scheduleTotal} blocks. Must be < 10,000.`);
     return;
   }
-  if (fundAmount < 0.15) {
-    alert(`Minimum fund is 0.15 RITUAL.`);
+  if (fundAmount < 0.1) {
+    alert(`Minimum fund is 0.1 RITUAL.`);
     return;
   }
 
@@ -1119,14 +1119,15 @@ async function depositToWallet() {
     const tx = await wallet.depositFor(agent, lockBlocks, { value, gasLimit: 3_000_000 });
     log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx.hash}' target='_blank' class='tx-hash'>${tx.hash}</a>`);
     let receipt = null;
-    for (let i = 0; i < 60; i++) {
-      await new Promise(r => setTimeout(r, 2000));
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 5000));
       try { const raw = await provider.send('eth_getTransactionReceipt', [tx.hash]); if (raw) { receipt = raw; break; } } catch(e) {}
     }
-    if (!receipt) throw new Error('Transaction timed out');
+    if (!receipt) throw new Error('Transaction timed out after 150s');
     const status = receipt.status === '0x1' || receipt.status === '0x01' || receipt.status === 1;
     if (!status) throw new Error('Deposit reverted');
-    log(termDiv, 'success', `Deposited ${amount} RITUAL`);
+    log(termDiv, 'success', `Deposited ${amount} RITUAL to ${agent}`);
+    log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx.hash}' target='_blank' class='tx-hash'>View TX</a>`);
   } catch (err) {
     log(termDiv, 'error', `Error: ${err.message}`);
   } finally {
@@ -1149,20 +1150,27 @@ async function restartAgent() {
 
   try {
     log(termDiv, 'comment', `Restart agent ${agent}`);
-    try { await provider.call({ to: agent, data: '0xc0406226', from: userAddress }); } catch(e) {
-      throw new Error('restart() would revert');
+
+    // The Ritual harness doesn't expose a restart() function.
+    // Instead, reconfigure the agent by calling configureFundAndStart again.
+    // This requires: calldata from the encode API + funds.
+    log(termDiv, 'cmd', 'Harness does not expose restart() directly.');
+    log(termDiv, 'cmd', 'To restart: re-deploy with same salt (predictHarness returns same address if already deployed).');
+    log(termDiv, 'info', 'Go to Deploy tab > same salt > Deploy. The harness reuses if already exists.');
+    log(termDiv, 'info', 'Or deposit more funds to keep the agent running.');
+
+    // Check if agent has funds
+    const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+    const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
+    const balance = await wallet.balanceOf(agent);
+    const balFmt = parseFloat(ethers.formatEther(balance)).toFixed(4);
+    log(termDiv, 'info', `Current balance: ${balFmt} RITUAL`);
+
+    if (balance === 0n) {
+      log(termDiv, 'warn', 'No funds. Deposit first, then re-deploy with same salt.');
+    } else {
+      log(termDiv, 'info', 'Agent has funds. Re-deploy with same salt from Deploy tab to reconfigure.');
     }
-    const tx = await signer.sendTransaction({ to: agent, data: '0xc0406226', gasLimit: 5_000_000 });
-    log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx.hash}' target='_blank' class='tx-hash'>${tx.hash}</a>`);
-    let receipt = null;
-    for (let i = 0; i < 60; i++) {
-      await new Promise(r => setTimeout(r, 2000));
-      try { const raw = await provider.send('eth_getTransactionReceipt', [tx.hash]); if (raw) { receipt = raw; break; } } catch(e) {}
-    }
-    if (!receipt) throw new Error('Transaction timed out');
-    const status = receipt.status === '0x1' || receipt.status === '0x01' || receipt.status === 1;
-    if (!status) throw new Error('restart() reverted');
-    log(termDiv, 'success', 'Agent restarted');
   } catch (err) {
     log(termDiv, 'error', `Error: ${err.message}`);
   } finally {
@@ -1185,20 +1193,34 @@ async function stopAgent() {
 
   try {
     log(termDiv, 'comment', `Stop agent ${agent}`);
-    try { await provider.call({ to: agent, data: '0x07da28de', from: userAddress }); } catch(e) {
-      throw new Error('stop() would revert');
+
+    // The Ritual harness doesn't expose a stop() function.
+    // Agent stops when: funds run out, scheduler expires, or lock expires.
+    // To force-stop: funds will be locked until lockDuration expires.
+    log(termDiv, 'cmd', 'Harness does not expose stop() directly.');
+    log(termDiv, 'info', 'Agent stops automatically when funds run out or scheduler TTL expires.');
+    log(termDiv, 'info', 'Funds are locked in RitualWallet until lock duration expires.');
+
+    // Check current status
+    const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+    const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
+    const balance = await wallet.balanceOf(agent);
+    const lockUntil = await wallet.lockUntil(agent);
+    const currentBlock = await rpcProvider.getBlockNumber();
+    const balFmt = parseFloat(ethers.formatEther(balance)).toFixed(4);
+    const blocksLeft = Number(lockUntil) - currentBlock;
+    const hoursLeft = Math.max(0, Math.round(blocksLeft * 3.5 / 3600));
+
+    log(termDiv, 'info', `Balance: ${balFmt} RITUAL`);
+    log(termDiv, 'info', `Lock: ${hoursLeft > 0 ? hoursLeft + 'h remaining' : 'expired'}`);
+
+    if (blocksLeft <= 0 && balance > 0n) {
+      log(termDiv, 'success', 'Lock expired. Funds can be withdrawn from RitualWallet.');
+    } else if (balance === 0n) {
+      log(termDiv, 'info', 'No funds. Agent is effectively stopped.');
+    } else {
+      log(termDiv, 'warn', `Funds locked for ${hoursLeft}h. Agent will stop when funds deplete.`);
     }
-    const tx = await signer.sendTransaction({ to: agent, data: '0x07da28de', gasLimit: 3_500_000 });
-    log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx.hash}' target='_blank' class='tx-hash'>${tx.hash}</a>`);
-    let receipt = null;
-    for (let i = 0; i < 60; i++) {
-      await new Promise(r => setTimeout(r, 2000));
-      try { const raw = await provider.send('eth_getTransactionReceipt', [tx.hash]); if (raw) { receipt = raw; break; } } catch(e) {}
-    }
-    if (!receipt) throw new Error('Transaction timed out');
-    const status = receipt.status === '0x1' || receipt.status === '0x01' || receipt.status === 1;
-    if (!status) throw new Error('stop() reverted');
-    log(termDiv, 'success', 'Agent stopped');
   } catch (err) {
     log(termDiv, 'error', `Error: ${err.message}`);
   } finally {
