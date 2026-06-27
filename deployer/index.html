@@ -638,13 +638,13 @@
 
       <!-- Stop Agent -->
       <div class="glass rounded-xl p-2 md:p-3">
-        <h3 class="text-xs font-semibold mb-3" style="color:#ef4444">Stop / Status</h3>
+        <h3 class="text-xs font-semibold mb-3" style="color:#ef4444">Stop Agent</h3>
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
             <input id="m-stop-agent" type="text" placeholder="0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
-          <button onclick="stopAgent()" id="stop-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Check Status</button>
+          <button onclick="stopAgent()" id="stop-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Stop Agent</button>
         </div>
         <div id="stop-terminal" class="terminal rounded-lg p-2 text-xs mono max-h-32 overflow-y-auto mt-2 hidden"></div>
       </div>
@@ -1915,10 +1915,16 @@ async function restartAgent() {
     const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
 
     // Check on-chain state
-    let wakeMode = 0;
+    let isRunning = false;
     try {
-      const r = await rpcProvider.call({ to: agent, data: '0xc9777451' });
-      wakeMode = parseInt(r.hex(), 16);
+      const r = await rpcProvider.call({ to: agent, data: '0x2014e5d1' }); // isRunning()
+      isRunning = r.length >= 32 ? r[31] === 1 : false;
+    } catch(e) {}
+
+    let wakeCount = 0n;
+    try {
+      const r = await rpcProvider.call({ to: agent, data: '0x46cebb38' }); // wakeCount()
+      wakeCount = BigInt(r);
     } catch(e) {}
 
     const balance = await wallet.balanceOf(agent);
@@ -1929,26 +1935,44 @@ async function restartAgent() {
     const hoursLeft = Math.max(0, Math.round(blocksLeft * 3.5 / 3600));
 
     log(termDiv, 'info', `Balance: ${balFmt} RITUAL | Lock: ${hoursLeft > 0 ? hoursLeft + 'h left' : 'expired'}`);
-    log(termDiv, 'info', `Wake mode: ${wakeMode} (${wakeMode === 0 ? 'uninitialized' : wakeMode === 1 ? 'stopped' : wakeMode === 2 ? 'configured, not armed' : wakeMode >= 3 ? 'armed/active' : 'unknown'})`);
+    log(termDiv, 'info', `Running: ${isRunning} | Wakes: ${wakeCount}`);
 
-    if (wakeMode >= 3) {
-      log(termDiv, 'success', 'Agent is armed and active. No restart needed.');
-    } else if (wakeMode === 2) {
-      log(termDiv, 'warn', 'Agent configured but not armed (wakeMode=2).');
-      log(termDiv, 'cmd', 'Re-triggering configureFundAndStart...');
-      log(termDiv, 'info', 'Go to Deploy tab > use SAME salt > Deploy again.');
-      log(termDiv, 'info', 'CREATE3 deterministic: same salt = same address = same harness.');
-      log(termDiv, 'info', 'The new configureFundAndStart will re-arm the scheduler.');
-    } else if (balance === 0n) {
-      log(termDiv, 'warn', 'No funds. Deposit first.');
-    } else {
-      log(termDiv, 'warn', `Agent in unknown state (wakeMode=${wakeMode}).`);
-      log(termDiv, 'info', 'Try Deploy tab with same salt to reconfigure.');
+    if (!isRunning) {
+      log(termDiv, 'warn', 'Agent is NOT running.');
+      log(termDiv, 'cmd', 'To restart: Deploy tab > enter same salt > Deploy again.');
+      log(termDiv, 'info', 'This re-calls configureFundAndStart() to re-arm the scheduler.');
+      btn.innerHTML = 'Check & Restart';
+      return;
     }
 
-    // Link to deploy tab with salt pre-fill hint
+    // Agent IS running — confirm stop + restart
+    if (!confirm(`Agent is running (${wakeCount} wakes). Stop and restart?\n\nThis sends 2 transactions:\n1. stop() — cancel scheduler\n2. Reconfigure via Deploy tab`)) {
+      btn.innerHTML = 'Check & Restart';
+      return;
+    }
+
+    // Step 1: Stop
+    log(termDiv, 'cmd', 'Step 1: Sending stop()...');
+    btn.innerHTML = 'Stopping...';
+    const harness = new ethers.Contract(agent, ['function stop() external', 'function isRunning() view returns (bool)'], signer);
+    try {
+      const tx = await harness.stop();
+      log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx.hash}' target='_blank' class='tx-hash'>${tx.hash.slice(0,18)}...</a>`);
+      const receipt = await tx.wait();
+      log(termDiv, 'success', `Stopped! Gas: ${receipt.gasUsed.toString()}`);
+    } catch (stopErr) {
+      if (stopErr.message?.includes('NotRunning')) {
+        log(termDiv, 'warn', 'Agent was already stopped.');
+      } else {
+        throw stopErr;
+      }
+    }
+
+    // Step 2: Guide to reconfigure
     log(termDiv, 'info', '');
-    log(termDiv, 'cmd', 'To reconfigure: Deploy tab > enter same salt > Deploy');
+    log(termDiv, 'cmd', 'Step 2: Go to Deploy tab > enter same salt > Deploy');
+    log(termDiv, 'info', 'This re-calls configureFundAndStart() with fresh params.');
+    log(termDiv, 'info', 'The CREATE2 deterministic address stays the same.');
 
   } catch (err) {
     log(termDiv, 'error', `Error: ${err.message}`);
@@ -1968,21 +1992,27 @@ async function stopAgent() {
   termDiv.classList.remove('hidden');
   termDiv.innerHTML = '';
   btn.disabled = true;
-  btn.innerHTML = 'Stopping...';
+  btn.innerHTML = 'Checking...';
 
   try {
     log(termDiv, 'comment', `Stop agent ${agent}`);
 
-    // The Ritual harness doesn't expose a stop() function.
-    // Agent stops when: funds run out, scheduler expires, or lock expires.
-    // To force-stop: funds will be locked until lockDuration expires.
-    log(termDiv, 'cmd', 'Harness does not expose stop() directly.');
-    log(termDiv, 'info', 'Agent stops automatically when funds run out or scheduler TTL expires.');
-    log(termDiv, 'info', 'Funds are locked in RitualWallet until lock duration expires.');
-
-    // Check current status
     const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
     const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
+
+    // Check current state
+    let isRunning = false;
+    try {
+      const r = await rpcProvider.call({ to: agent, data: '0x2014e5d1' }); // isRunning()
+      isRunning = r.length >= 32 ? r[31] === 1 : false;
+    } catch(e) {}
+
+    let wakeCount = 0n;
+    try {
+      const r = await rpcProvider.call({ to: agent, data: '0x46cebb38' }); // wakeCount()
+      wakeCount = BigInt(r);
+    } catch(e) {}
+
     const balance = await wallet.balanceOf(agent);
     const lockUntil = await wallet.lockUntil(agent);
     const currentBlock = await rpcProvider.getBlockNumber();
@@ -1990,16 +2020,49 @@ async function stopAgent() {
     const blocksLeft = Number(lockUntil) - currentBlock;
     const hoursLeft = Math.max(0, Math.round(blocksLeft * 3.5 / 3600));
 
-    log(termDiv, 'info', `Balance: ${balFmt} RITUAL`);
-    log(termDiv, 'info', `Lock: ${hoursLeft > 0 ? hoursLeft + 'h remaining' : 'expired'}`);
+    log(termDiv, 'info', `Balance: ${balFmt} RITUAL | Lock: ${hoursLeft > 0 ? hoursLeft + 'h left' : 'expired'}`);
+    log(termDiv, 'info', `Running: ${isRunning} | Wakes: ${wakeCount}`);
 
-    if (blocksLeft <= 0 && balance > 0n) {
-      log(termDiv, 'success', 'Lock expired. Funds can be withdrawn from RitualWallet.');
-    } else if (balance === 0n) {
-      log(termDiv, 'info', 'No funds. Agent is effectively stopped.');
-    } else {
-      log(termDiv, 'warn', `Funds locked for ${hoursLeft}h. Agent will stop when funds deplete.`);
+    if (!isRunning) {
+      log(termDiv, 'warn', 'Agent is already stopped.');
+      if (blocksLeft <= 0 && balance > 0n) {
+        log(termDiv, 'success', 'Lock expired. Funds can be withdrawn from RitualWallet.');
+      } else if (balance > 0n) {
+        log(termDiv, 'info', `Funds locked for ${hoursLeft}h more.`);
+      }
+      btn.innerHTML = 'Check Status';
+      return;
     }
+
+    // Agent is running — confirm stop
+    if (!confirm(`Agent is running (${wakeCount} wakes, ${balFmt} RITUAL).\n\nSend stop() to cancel scheduler?\n\nNote: Funds remain locked until lock expires.`)) {
+      btn.innerHTML = 'Check Status';
+      return;
+    }
+
+    // Send stop() transaction
+    log(termDiv, 'cmd', 'Sending stop()...');
+    btn.innerHTML = 'Stopping...';
+    const harness = new ethers.Contract(agent, [
+      'function stop() external',
+      'function owner() view returns (address)'
+    ], signer);
+
+    // Verify ownership
+    const owner = await rpcProvider.call({ to: agent, data: '0x8da5cb5b' }); // owner()
+    const ownerAddr = '0x' + owner.slice(-40);
+    if (ownerAddr.toLowerCase() !== userAddress.toLowerCase()) {
+      throw new Error(`Not owner. Owner: ${ownerAddr.slice(0,10)}... You: ${userAddress.slice(0,10)}...`);
+    }
+
+    const tx = await harness.stop();
+    log(termDiv, 'info', `TX: <a href='https://explorer.ritualfoundation.org/tx/${tx.hash}' target='_blank' class='tx-hash'>${tx.hash.slice(0,18)}...</a>`);
+    const receipt = await tx.wait();
+    log(termDiv, 'success', `Agent stopped! Gas: ${receipt.gasUsed.toString()}`);
+    log(termDiv, 'info', '');
+    log(termDiv, 'info', 'Funds remain locked in RitualWallet until lock expires.');
+    log(termDiv, 'info', 'To restart: Deploy tab > enter same salt > Deploy');
+
   } catch (err) {
     log(termDiv, 'error', `Error: ${err.message}`);
   } finally {
