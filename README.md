@@ -4,45 +4,147 @@
 
 **Deploy autonomous AI agents on Ritual Chain**
 
-[![Chain](https://img.shields.io/badge/Chain-Ritual_1979-8b5cf6?style=for-the-badge&logo=ethereum&logoColor=white)](https://explorer.ritualfoundation.org)
-[![Deploy](https://img.shields.io/badge/Deploy-Vercel-000?style=for-the-badge&logo=vercel&logoColor=white)](https://sovereign-deployer.vercel.app)
-[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+[![Chain](https://img.shields.io/badge/Chain-Ritual_Testnet-8b5cf6?style=for-the-badge&logo=ethereum&logoColor=white)](https://explorer.ritualfoundation.org)
+[![Deploy](https://img.shields.io/badge/Live-Deployer-22c55e?style=for-the-badge&logo=vercel&logoColor=white)](https://sovereign-deployer.vercel.app)
+[![License](https://img.shields.io/badge/License-MIT-b49eff?style=for-the-badge)](LICENSE)
 
 *Sovereign agents run on-chain, execute in TEE, and deliver results via async callbacks.*
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  SovereignAgentFactory                    │
+│  predictHarness(user, salt) → harness address            │
+│  deployHarness(salt) → deploys proxy harness             │
+└───────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Harness (Proxy)                        │
+│  configureFundAndStart(params, schedule, rolling, lock)  │
+│  stop() / restart() / deposit()                          │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │            RitualWallet (0x532F)                  │    │
+│  │  depositFor(user, lockDuration)                  │    │
+│  └─────────────────────────────────────────────────┘    │
+└───────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────────────────────┐
+│                   TEE Executor Node                      │
+│  1. Decrypt secrets (ECIES)                              │
+│  2. Run LLM inference (Ritual precompile / external)     │
+│  3. Execute agent logic                                  │
+│  4. Deliver results via callback                         │
+└─────────────────────────────────────────────────────────┘
+```
 
 </div>
 
 ---
 
+## ◦ Features
+
+| Feature | Status |
+|---------|--------|
+| 🔗 Web Deploy (browser, no CLI) | ✅ Live |
+| 🧠 LLM Simulation (test before deploy) | ✅ Live |
+| 📦 HuggingFace integration | ✅ Live |
+| 🖥️ CLI Runtime selector (Crush/ZeroClaw) | ✅ Live |
+| 📊 My Agents dashboard | ✅ Live |
+| ⚡ Quick actions (stop/deposit/restart) | ✅ Live |
+| 🔍 On-chain status checker | ✅ Live |
+| 📋 .env generator | ✅ Live |
+| 🏥 Health scoring | ✅ Live |
+| 💰 Cost estimation | ✅ Live |
+| 🔄 Batch operations | ✅ Live |
+| 🌐 Network detection | ✅ Live |
+
+---
+
 ## ◦ Quick Start
 
-### Web Deploy (no CLI)
+### Web Deploy (Recommended)
 
 Deploy agents directly from your browser — connect wallet, configure, done.
 
 **→ [sovereign-deployer.vercel.app](https://sovereign-deployer.vercel.app)**
 
-- Ritual Native LLM (no API key) or external providers
-- One-click deploy with ECIES encryption handled server-side
-- My Agents dashboard with on-chain event scanning
-- Deposit, Restart, Stop from the UI
+```
+1. Connect wallet (MetaMask / Rabby)
+2. Configure: Salt, Prompt, HuggingFace, LLM Provider, Executor
+3. CLI Runtime: Select Crush (5) or ZeroClaw (6)
+4. Click Deploy → approve 2 transactions
+5. Check status → My Agents → Manage
+```
 
 ### CLI Deploy
 
 ```bash
 git clone https://github.com/frianowzki/ritual-sovereign-agent-guide.git
 cd ritual-sovereign-agent-guide
+
+# Setup
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env && nano .env
+
+# Deploy
 python3 scripts/deploy.py
+
+# Check status
+python3 scripts/check-status.py --harness 0xYOUR_HARNESS
+
+# Reconfigure
+python3 scripts/reconfigure.py --harness 0xYOUR_HARNESS
 ```
+
+---
+
+## ◦ Web UI Guide
+
+### Deploy Tab
+
+Configure your agent with 5 steps:
+
+| Step | What | Required |
+|------|------|----------|
+| 1. Agent Config | Salt (unique ID) + Prompt | ✅ |
+| 2. HuggingFace | Dataset repo + Write token | ✅ |
+| 3. LLM Provider | Provider + Model + API key | ✅ |
+| 4. TEE Executor | Select executor + CLI Runtime | ✅ |
+| 5. Schedule & Budget | Frequency, calls, fund amount | ✅ |
+
+**Before deploy:** Run Smoke Test (validates HF + LLM) and LLM Test (verifies provider).
+
+### My Agents Tab
+
+All agents deployed on Ritual Chain, regardless of deployer:
+
+| Feature | Description |
+|---------|-------------|
+| 🔍 Explorer API | Primary source — fetches ALL agents on-chain |
+| ➕ Manual Input | Add agents not indexed by explorer |
+| ✅ Owner Verification | On-chain `owner()` check |
+| 🏥 Health Score | 🟢 Healthy / 🟡 Warning / 🔴 Critical / ⚪ Stopped |
+| 💰 Cost Tracker | Daily cost estimate + days remaining |
+| ⚡ Quick Actions | One-click stop, deposit, restart |
+| 📦 Batch Operations | Stop/deposit multiple agents at once |
+| 🔄 Wallet Detection | Auto-reload on wallet/network switch |
+| 🌐 Network Check | Warns if not on Ritual Chain |
+
+### Manage Tab
+
+| Action | What it does |
+|--------|-------------|
+| **Deposit** | `wallet.depositFor()` — fund RitualWallet |
+| **Restart/Reconfigure** | `stop()` → Deploy tab (same salt = same address) |
+| **Stop** | `stop()` on harness — cancels scheduler |
 
 ---
 
 ## ◦ LLM Providers
 
-### Native (recommended — no API key)
+### Native (Recommended — No API Key)
 
 Runs on-chain via Ritual precompile. Set `LLM_PROVIDER=native` in `.env`.
 
@@ -85,11 +187,47 @@ Runs on-chain via Ritual precompile. Set `LLM_PROVIDER=native` in `.env`.
 | `LLM_PROVIDER` | ✅ | `native` | `native` / `openrouter` / `openai` / `anthropic` / `gemini` |
 | `MODEL` | ✅ | `zai-org/GLM-4.7-FP8` | LLM model ID |
 | `SALT` | ✅ | — | Unique agent identifier |
-| `CLI_TYPE` | ✅ | `6` | Harness type (6 = ZeroClaw) |
-| `FREQUENCY` | ✅ | `5000` | Blocks between executions |
+| `CLI_TYPE` | ✅ | `6` | Harness type (5=Crush, 6=ZeroClaw) |
+| `FREQUENCY` | ✅ | `2000` | Blocks between executions (~12 min) |
 | `WINDOW_NUM_CALLS` | ✅ | `5` | Calls per window |
-| `FUND_AMOUNT` | ✅ | `0.15` | RITUAL to deposit (min 0.15) |
-| `LOCK_DURATION` | ✅ | `1728000` | Blocks to lock funds |
+| `FUND_AMOUNT` | ✅ | `0.25` | RITUAL to deposit (min 0.25) |
+| `LOCK_DURATION` | ✅ | `1728000` | Blocks to lock funds (7 days) |
+
+---
+
+## ◦ CLI Reference
+
+### deploy.py
+
+```bash
+python3 scripts/deploy.py \
+  --rpc https://rpc.ritualfoundation.org \
+  --salt my-agent \
+  --cli-type 6 \
+  --model zai-org/GLM-4.7-FP8 \
+  --hf-token hf_xxx \
+  --hf-repo-id username/agent-data \
+  --prompt "You are a sovereign agent on Ritual Chain" \
+  --fund 0.25 \
+  --frequency 2000 \
+  --window-calls 5
+```
+
+### check-status.py
+
+```bash
+python3 scripts/check-status.py \
+  --harness 0xEC87F4Cf6f1AD2fd47bfbB25b7FDAE093Fb6b097
+```
+
+### reconfigure.py
+
+```bash
+python3 scripts/reconfigure.py \
+  --harness 0xEC87F4Cf6f1AD2fd47bfbB25b7FDAE093Fb6b097 \
+  --salt my-agent \
+  --fund 0.5
+```
 
 ---
 
@@ -133,7 +271,7 @@ Ritual Chain — **350ms block time**
 ┌─────────────────────────────────────────────────────────┐
 │                    Harness (Proxy)                        │
 │  configureFundAndStart(params, schedule, rolling, lock)  │
-│  restart() / stop()                                      │
+│  stop() / restart() / deposit()                          │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │            RitualWallet (0x532F)                  │    │
 │  │  depositFor(user, lockDuration)                  │    │
@@ -160,7 +298,7 @@ ritual-sovereign-agent-guide/
 │   ├── index.html          # Sovereign Deployer UI
 │   ├── api/
 │   │   ├── encode.py       # ECIES encryption + ABI encoding
-│   │   └── requirements.txt
+│   │   └── executors.py    # TEE executor registry
 │   └── vercel.json
 ├── scripts/
 │   ├── deploy.py           # Full deploy pipeline
@@ -182,5 +320,7 @@ ritual-sovereign-agent-guide/
 <div align="center">
 
 **Built by [Frianowzki](https://github.com/frianowzki) on Ritual Testnet**
+
+*Agent is sovereign. Data is on-chain. TEE keeps secrets.*
 
 </div>
