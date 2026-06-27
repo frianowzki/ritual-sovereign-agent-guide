@@ -588,12 +588,55 @@
   <!-- ═══════════════ MY AGENTS TAB ═══════════════ -->
   <div id="panel-agents" class="hidden fade-in flex-1 overflow-y-auto">
     <div class="max-w-2xl mx-auto space-y-3">
+      <!-- Header + Manual Input -->
       <div class="glass rounded-xl p-2 md:p-3">
-        <button onclick="loadMyAgents()" id="agents-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs">
-          Load My Agents
-        </button>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <h3 class="text-xs font-semibold" style="color:#b49eff">My Agents</h3>
+            <span id="agents-count" class="text-xs text-slate-500"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="agents-updated" class="text-xs text-slate-600"></span>
+            <button onclick="refreshAgents()" id="agents-refresh-btn" class="btn-outline rounded-lg px-2 py-0.5 text-xs">↻ Refresh</button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <input id="m-add-agent" type="text" placeholder="Add agent by address (0x...)" class="flex-1 rounded-lg px-3 py-1.5 text-xs mono" style="background:rgba(255,255,255,0.05);border:1px solid rgba(180,158,255,0.2);color:#e2e8f0" />
+          <button onclick="addManualAgent()" id="add-agent-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs">Add</button>
+        </div>
+        <div id="add-agent-result" class="hidden mt-2 rounded-lg p-2 text-xs"></div>
+        <div id="network-warning" class="hidden mt-2 rounded-lg px-3 py-2 text-xs" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3)">
+          <span class="text-yellow-400">⚠️ Not on Ritual Chain. <button onclick="switchToRitual()" class="underline">Switch network</button></span>
+        </div>
       </div>
+      <!-- Batch Actions -->
+      <div id="batch-bar" class="hidden glass rounded-xl p-2 md:p-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="select-all-agents" onchange="toggleSelectAll()" class="accent-purple-500" />
+            <span class="text-xs text-slate-400"><span id="selected-count">0</span> selected</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="batchStop()" class="btn-outline rounded-lg px-2 py-1 text-xs" style="border-color:rgba(239,68,68,0.4);color:#ef4444">Stop Selected</button>
+            <button onclick="batchDeposit()" class="btn-outline rounded-lg px-2 py-1 text-xs" style="border-color:rgba(34,197,94,0.4);color:#22c55e">Deposit to Selected</button>
+          </div>
+        </div>
+      </div>
+      <!-- Agent List -->
       <div id="agents-list" class="space-y-2"></div>
+      <!-- Agent Detail View -->
+      <div id="agent-detail" class="hidden glass rounded-xl p-3 md:p-4">
+        <div class="flex items-center justify-between mb-3">
+          <button onclick="closeAgentDetail()" class="text-slate-400 text-xs flex items-center gap-1">← Back</button>
+          <span id="detail-health" class="text-xs font-semibold px-2 py-0.5 rounded-full"></span>
+        </div>
+        <div id="detail-content"></div>
+        <div class="flex gap-2 mt-3">
+          <button onclick="detailAction('stop')" class="btn-primary rounded-lg px-3 py-1.5 text-xs flex-1" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Stop</button>
+          <button onclick="detailAction('deposit')" class="btn-primary rounded-lg px-3 py-1.5 text-xs flex-1" style="background:linear-gradient(135deg,#22c55e,#16a34a)">Deposit</button>
+          <a id="detail-explorer-link" href="#" target="_blank" class="btn-outline rounded-lg px-3 py-1.5 text-xs flex-1 text-center">Explorer</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2072,235 +2115,432 @@ async function stopAgent() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  MY AGENTS — hybrid: localStorage + on-chain events + explorer
+//  MY AGENTS — Explorer primary + on-chain verification + cache
 // ═══════════════════════════════════════════════════════════
-async function loadMyAgents() {
-  if (!signer || !userAddress) { alert('Connect wallet first'); return; }
+const RITUAL_CHAIN_ID = 13827;
+let allAgentsData = [];
+let selectedAgents = new Set();
+let currentDetailAddr = null;
 
-  const btn = document.getElementById('agents-btn');
-  const listDiv = document.getElementById('agents-list');
-  btn.disabled = true;
-  btn.innerHTML = 'Scanning...';
-  listDiv.innerHTML = '';
+const RITUAL_WALLET_ABI_LOCAL = [
+  'function balanceOf(address account) view returns (uint256)',
+  'function lockUntil(address account) view returns (uint256)'
+];
 
+// ── Network Detection ──
+async function checkRitualNetwork() {
   try {
-    const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
-    const factory = new ethers.Contract(SOVEREIGN_FACTORY, FACTORY_ABI, rpcProvider);
-    const wallet = new ethers.Contract(RITUAL_WALLET, WALLET_ABI, rpcProvider);
-    const currentBlock = await rpcProvider.getBlockNumber();
-    const agents = new Map();
-
-    // 1. localStorage (instant)
-    const saved = JSON.parse(localStorage.getItem('sr_agents') || '[]');
-    for (const a of saved) {
-      agents.set(a.address.toLowerCase(), { ...a, source: 'local' });
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    const id = parseInt(chainId, 16);
+    const warn = document.getElementById('network-warning');
+    if (id !== RITUAL_CHAIN_ID) {
+      warn.classList.remove('hidden');
+      return false;
     }
+    warn.classList.add('hidden');
+    return true;
+  } catch(e) { return true; }
+}
 
-    // 2. On-chain events (most reliable — last ~3 months)
-    try {
-      const fromBlock = Math.max(0, currentBlock - 7_776_000); // ~3 months
-      const filter = factory.filters.DeployHarness(userAddress);
-      const events = await factory.queryFilter(filter, fromBlock, currentBlock);
-      for (const ev of events) {
-        const addr = ev.args.harness.toLowerCase();
-        if (!agents.has(addr)) {
-          agents.set(addr, { address: ev.args.harness, salt: 'on-chain', timestamp: ev.blockNumber * 350, source: 'on-chain' });
-        }
-      }
-    } catch(e) { console.warn('Event scan failed:', e.message); }
-
-    // 3. Explorer API (fallback)
-    try {
-      const resp = await fetch('https://explorer.ritualfoundation.org/api/agents/cache');
-      const cache = await resp.json();
-      const allAgents = [...(cache.sovereign || []), ...(cache.persistent || [])];
-      for (const agent of allAgents) {
-        if (agent.info?.owner?.toLowerCase() === userAddress.toLowerCase()) {
-          const addr = agent.address.toLowerCase();
-          if (!agents.has(addr)) {
-            agents.set(addr, { address: agent.address, salt: 'explorer', timestamp: 0, source: 'explorer' });
-          }
-          // Enrich with explorer data
-          const existing = agents.get(addr);
-          existing.agentType = agent.info?.type || 'sovereign';
-          existing.agentState = agent.info?.state;
-          existing.isAlive = agent.info?.isAlive;
-          existing.lastBlock = agent.lastActivityBlock || agent.info?.lastHeartbeatBlock;
-        }
-      }
-    } catch(e) { console.warn('Explorer scan failed:', e.message); }
-
-    // Save all found agents to localStorage for next time
-    const allAgentsArr = Array.from(agents.values());
-    localStorage.setItem('sr_agents', JSON.stringify(allAgentsArr.map(a => ({ address: a.address, salt: a.salt, timestamp: a.timestamp }))));
-
-    if (agents.size === 0) {
-      listDiv.innerHTML = `<div class="glass rounded-xl p-4 text-center"><p class="text-slate-500 text-xs">No agents found. Deploy one from the Deploy tab.</p></div>`;
-      return;
-    }
-
-    // Render
-    const cards = [];
-    for (const [addr, agent] of agents) {
-      let balance = 0n, lockUntil = 0n, wakeMode = 0, configured = false;
-      let owner = 'N/A';
-
-      const code = await rpcProvider.getCode(addr);
-      const hasCode = code && code !== '0x' && code !== '0x0';
-
-      if (hasCode) {
-        try { const r = await rpcProvider.call({ to: addr, data: '0x8da5cb5b' }); owner = '0x' + r.slice(26); } catch(e) {}
-        try { const r = await rpcProvider.call({ to: addr, data: '0xf42a46d7' }); configured = r.slice(66 - 2) === '01'; } catch(e) {}
-        try { const r = await rpcProvider.call({ to: addr, data: '0x78a01a68' }); wakeMode = parseInt(r.slice(66 - 2), 16); } catch(e) {}
-        try { balance = await wallet.balanceOf(addr); } catch(e) {}
-        try { lockUntil = await wallet.lockUntil(addr); } catch(e) {}
-      }
-
-      // Read state slot[3] for more accurate state
-      let rawState = 0;
-      if (hasCode) {
-        try {
-          const storageVal = await rpcProvider.getStorage(addr, 3n);
-          rawState = parseInt(storageVal.slice(-2), 16);
-        } catch(e) {}
-      }
-
-      // State labels based on on-chain analysis
-      // 0=uninitialized, 1=deployed, 2=configuring, 3=configuring, 4=configured, 5=armed/active, 6+=running
-      const stateMap = {
-        0: { label: 'Uninitialized', color: '#6b7280' },
-        1: { label: 'Deployed', color: '#ef4444' },
-        2: { label: 'Configuring', color: '#eab308' },
-        3: { label: 'Configuring', color: '#eab308' },
-        4: { label: 'Configured', color: '#3b82f6' },
-        5: { label: 'Armed', color: '#b49eff' },
-      };
-      const stateInfo = stateMap[rawState] || { label: `State ${rawState}`, color: '#8b5cf6' };
-      
-      // Owner mismatch detection
-      const isOwnerMatch = owner.toLowerCase() === userAddress.toLowerCase();
-      const ownerWarning = !isOwnerMatch && owner !== 'N/A' 
-        ? `<div class="flex items-center gap-1 mt-1 px-2 py-1 rounded" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3)">
-            <span class="text-red-400 text-xs">⚠️ Owner mismatch — deployed from ${owner.slice(0,8)}...${owner.slice(-6)}</span>
-          </div>`
-        : '';
-
-      const stateLabel = stateInfo.label;
-      const stateColor = stateInfo.color;
-      const balStr = balance > 0n ? ethers.formatEther(balance) : '0';
-      const blocksLeft = Number(lockUntil) - currentBlock;
-
-      cards.push(`
-        <div class="glass rounded-xl p-2 md:p-3">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full" style="background:${stateColor}"></span>
-              <span class="text-xs font-semibold text-slate-200">${agent.salt || addr.slice(0,10)}</span>
-            </div>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:${stateColor}20;color:${stateColor}">${stateLabel}</span>
-          </div>
-          ${ownerWarning}
-          <div class="space-y-1 text-xs mt-2">
-            <div class="flex justify-between">
-              <span class="text-slate-500">Address</span>
-              <a href="https://explorer.ritualfoundation.org/agents/${addr}" target="_blank" class="mono tx-hash">${addr.slice(0,10)}...${addr.slice(-8)}</a>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">Owner</span>
-              <span class="mono ${isOwnerMatch ? 'text-green-400' : 'text-red-400'}">${owner.slice(0,10)}...${owner.slice(-8)}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">Balance</span>
-              <span class="text-slate-300 font-semibold">${balStr} RITUAL</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">State</span>
-              <span class="text-slate-300">${rawState} (${stateLabel})</span>
-            </div>
-            ${blocksLeft > 0 ? `<div class="flex justify-between"><span class="text-slate-500">Lock</span><span class="text-slate-300">${Math.round(blocksLeft / BLOCKS_PER_HOUR)}h left</span></div>` : ''}
-            ${agent.lastBlock ? `<div class="flex justify-between"><span class="text-slate-500">Last Heartbeat</span><span class="text-slate-300">Block ${Number(agent.lastBlock).toLocaleString()}</span></div>` : ''}
-            <div class="flex justify-between">
-              <span class="text-slate-500">Source</span>
-              <span class="text-slate-400">${agent.source || 'unknown'}</span>
-            </div>
-          </div>
-          <div class="flex gap-2 mt-2 pt-2 border-t border-white/5">
-            <button onclick="document.getElementById('m-deposit-agent').value='${addr}';switchTab('manage')" class="btn-outline rounded-lg px-2 py-1 text-xs flex-1">Deposit</button>
-            <button onclick="document.getElementById('m-restart-agent').value='${addr}';switchTab('manage')" class="btn-outline rounded-lg px-2 py-1 text-xs flex-1">Restart</button>
-            <button onclick="document.getElementById('m-stop-agent').value='${addr}';switchTab('manage')" class="btn-outline rounded-lg px-2 py-1 text-xs flex-1" style="border-color:rgba(239,68,68,0.3);color:#ef4444">Stop</button>
-          </div>
-        </div>
-      `);
-    }
-
-    listDiv.innerHTML = cards.join('');
-
-  } catch (err) {
-    listDiv.innerHTML = `<div class="glass rounded-xl p-4"><p class="text-red-400 text-xs">Error: ${err.message}</p></div>`;
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = 'Load My Agents';
+async function switchToRitual() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x' + RITUAL_CHAIN_ID.toString(16) }]
+    });
+    document.getElementById('network-warning').classList.add('hidden');
+  } catch(e) {
+    alert('Switch to Ritual Chain (ID: ' + RITUAL_CHAIN_ID + ') in your wallet');
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  ENV GENERATOR
-// ═══════════════════════════════════════════════════════════
-function generateEnv() {
-  const provider_name = document.getElementById('d-provider').value;
-  const apikey = document.getElementById('d-apikey').value.trim() || 'your-api-key';
-  const model = document.getElementById('d-model').value || 'zai-org/GLM-4.7-FP8';
-  const hftoken = document.getElementById('d-hftoken').value.trim() || 'hf_your_token';
-  const hfrepo = document.getElementById('d-hfrepo').value.trim() || 'yourname/agent-data';
-  const salt = document.getElementById('d-salt').value.trim() || 'my-sovereign-agent';
-  const prompt = document.getElementById('d-prompt').value.trim();
-  const freq = document.getElementById('d-freq').value;
-  const windowCalls = document.getElementById('d-window').value;
-  const schedulerTtl = document.getElementById('d-schedttl').value || '500';
-  const fund = document.getElementById('d-fund').value;
-  const lockBlocks = document.getElementById('d-lockduration').value;
-  const cliType = document.querySelector('input[name="cli-type"]:checked')?.value || '6';
+// ── Health Score ──
+function getHealthScore(agent) {
+  const bal = agent.balance || 0n;
+  const lock = agent.lockUntil || 0n;
+  const running = agent.isRunning;
+  const wakes = agent.wakeCount || 0;
+  const currentBlock = agent.currentBlock || 0;
+  const blocksLeft = Number(lock) - currentBlock;
 
-  const apiKeyName = provider_name === 'openrouter' ? 'OPENROUTER_API_KEY' : provider_name === 'openai' ? 'OPENAI_API_KEY' : provider_name === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'GEMINI_API_KEY';
-
-  const env = `# ═══════════════════════════════════════════════════════
-# Ritual Sovereign Agent — Environment Configuration
-# ═══════════════════════════════════════════════════════
-
-# ── Blockchain ──────────────────────────────────────
-PRIVATE_KEY=***
-RPC_URL=https://rpc.ritualfoundation.org
-
-# ── LLM Provider ────────────────────────────────────
-# native = Ritual precompile (no API key needed)
-# External: openrouter / openai / anthropic / gemini
-LLM_PROVIDER=${provider_name === 'native' ? 'native' : provider_name}
-# ${apiKeyName}=${provider_name === 'native' ? '# uncomment if using external provider' : apikey}
-MODEL=${model}
-
-# ── HuggingFace ─────────────────────────────────────
-HF_TOKEN=***
-HF_REPO_ID=${hfrepo}
-
-# ── Agent Prompt ────────────────────────────────────
-AGENT_PROMPT=${prompt || ''}
-
-# ── Deployment Config ───────────────────────────────
-SALT=${salt}
-CLI_TYPE=${cliType}
-FREQUENCY=${freq}
-WINDOW_NUM_CALLS=${windowCalls}
-SCHEDULER_TTL=${schedulerTtl}
-ROLLOVER_THRESHOLD_BPS=5000
-FUND_AMOUNT=${fund}
-LOCK_DURATION=${lockBlocks}`;
-
-  const output = document.getElementById('env-output');
-  output.textContent = env;
-  output.classList.remove('hidden');
-  document.getElementById('env-copy-btn').classList.remove('hidden');
+  if (bal === 0n && !running) return { label: 'Stopped', color: '#6b7280', icon: '⚪' };
+  if (!running && wakes === 0) return { label: 'Idle', color: '#f97316', icon: '🟠' };
+  if (bal === 0n) return { label: 'Critical', color: '#ef4444', icon: '🔴' };
+  if (blocksLeft < 172800) return { label: 'Warning', color: '#eab308', icon: '🟡' };
+  if (running && bal > 0n && blocksLeft > 0) return { label: 'Healthy', color: '#22c55e', icon: '🟢' };
+  if (running) return { label: 'Active', color: '#22c55e', icon: '🟢' };
+  return { label: 'Unknown', color: '#8b5cf6', icon: '⚪' };
 }
 
+// ── Cost Estimate ──
+function getCostEstimate(agent) {
+  const bal = agent.balance || 0n;
+  const balFloat = parseFloat(ethers.formatEther(bal));
+  const wakes = agent.wakeCount || 0;
+  const avgCostPerWake = wakes > 0 ? balFloat / (wakes + balFloat / 0.003) : 0.003;
+  const estimatedDaily = avgCostPerWake * (86400 / (2000 * 0.35));
+  const daysLeft = estimatedDaily > 0 ? balFloat / estimatedDaily : 0;
+  return { deposited: balFloat + 0.02, remaining: balFloat, daily: estimatedDaily, daysLeft };
+}
+
+// ── Explorer API (Primary Source) ──
+async function fetchFromExplorer() {
+  const agents = new Map();
+  try {
+    const resp = await fetch('https://explorer.ritualfoundation.org/api/agents/cache');
+    if (!resp.ok) throw new Error('Explorer API ' + resp.status);
+    const cache = await resp.json();
+    const allAgents = [...(cache.sovereign || []), ...(cache.persistent || [])];
+    for (const agent of allAgents) {
+      if (agent.info?.owner?.toLowerCase() === userAddress.toLowerCase()) {
+        const addr = agent.address.toLowerCase();
+        agents.set(addr, {
+          address: agent.address,
+          source: 'explorer',
+          agentType: agent.info?.type || 'sovereign',
+          agentState: agent.info?.state,
+          isAlive: agent.info?.isAlive,
+          lastBlock: agent.lastActivityBlock || agent.info?.lastHeartbeatBlock,
+          timestamp: 0
+        });
+      }
+    }
+  } catch(e) { console.warn('Explorer API failed:', e.message); }
+  return agents;
+}
+
+// ── Factory Events (Supplementary) ──
+async function fetchFromFactoryEvents() {
+  const agents = new Map();
+  try {
+    const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+    const currentBlock = await rpcProvider.getBlockNumber();
+    const factory = new ethers.Contract(SOVEREIGN_FACTORY, FACTORY_ABI, rpcProvider);
+    const fromBlock = Math.max(0, currentBlock - 7_776_000);
+    const filter = factory.filters.DeployHarness(userAddress);
+    const events = await factory.queryFilter(filter, fromBlock, currentBlock);
+    for (const ev of events) {
+      const addr = ev.args.harness.toLowerCase();
+      if (!agents.has(addr)) {
+        agents.set(addr, {
+          address: ev.args.harness,
+          source: 'factory',
+          salt: ev.args.salt ? ethers.hexlify(ev.args.salt) : null,
+          timestamp: ev.blockNumber * 350
+        });
+      }
+    }
+  } catch(e) { console.warn('Factory events failed:', e.message); }
+  return agents;
+}
+
+// ── localStorage Cache ──
+function fetchFromCache() {
+  const agents = new Map();
+  const saved = JSON.parse(localStorage.getItem('sr_agents') || '[]');
+  for (const a of saved) {
+    agents.set(a.address.toLowerCase(), { ...a, source: 'cache' });
+  }
+  return agents;
+}
+
+function saveToCache(agents) {
+  const arr = Array.from(agents.values()).map(a => ({
+    address: a.address,
+    salt: a.salt || null,
+    label: a.label || null,
+    timestamp: a.timestamp || 0,
+    addedManually: a.addedManually || false
+  }));
+  localStorage.setItem('sr_agents', JSON.stringify(arr));
+}
+
+// ── On-chain Verification ──
+async function verifyOnChain(addr, rpcProvider) {
+  const result = { address: addr, hasCode: false };
+  try {
+    const code = await rpcProvider.getCode(addr);
+    result.hasCode = code && code !== '0x' && code !== '0x0';
+    if (!result.hasCode) return result;
+
+    // Owner
+    try {
+      const r = await rpcProvider.call({ to: addr, data: '0x8da5cb5b' });
+      result.owner = '0x' + r.slice(26);
+      result.isOwnerMatch = result.owner.toLowerCase() === userAddress.toLowerCase();
+    } catch(e) {}
+
+    // isRunning
+    try {
+      const r = await rpcProvider.call({ to: addr, data: '0x2014e5d1' });
+      result.isRunning = r.length >= 32 && r[31] === 1;
+    } catch(e) {}
+
+    // wakeCount
+    try {
+      const r = await rpcProvider.call({ to: addr, data: '0x46cebb38' });
+      result.wakeCount = Number(BigInt(r));
+    } catch(e) {}
+
+    // Balance + Lock
+    const wallet = new ethers.Contract(RITUAL_WALLET, RITUAL_WALLET_ABI_LOCAL, rpcProvider);
+    result.balance = await wallet.balanceOf(addr);
+    result.lockUntil = await wallet.lockUntil(addr);
+    result.currentBlock = await rpcProvider.getBlockNumber();
+  } catch(e) {}
+  return result;
+}
+
+// ── Main Load ──
+async function loadMyAgents() {
+  if (!signer || !userAddress) { alert('Connect wallet first'); return; }
+  await checkRitualNetwork();
+
+  const listDiv = document.getElementById('agents-list');
+  listDiv.innerHTML = '<div class="glass rounded-xl p-4 text-center"><p class="text-slate-500 text-xs">Scanning on-chain...</p></div>';
+
+  const agents = new Map();
+  const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+
+  // Layer 1: Cache (instant display)
+  const cached = fetchFromCache();
+  for (const [k, v] of cached) agents.set(k, v);
+
+  // Layer 2: Explorer API (primary)
+  const explorer = await fetchFromExplorer();
+  for (const [k, v] of explorer) {
+    if (!agents.has(k)) agents.set(k, v);
+    else Object.assign(agents.get(k), v, { source: 'explorer+cache' });
+  }
+
+  // Layer 3: Factory events
+  const factory = await fetchFromFactoryEvents();
+  for (const [k, v] of factory) {
+    if (!agents.has(k)) agents.set(k, v);
+    else if (!agents.get(k).salt && v.salt) agents.get(k).salt = v.salt;
+  }
+
+  // Step 2: Enrich each agent with on-chain data
+  allAgentsData = [];
+  for (const [addr, agent] of agents) {
+    const enriched = await verifyOnChain(addr, rpcProvider);
+    Object.assign(agent, enriched);
+    agent.label = agent.label || agent.salt || ('Agent @ ' + addr.slice(0, 8) + '...');
+    allAgentsData.push(agent);
+  }
+
+  // Save to cache
+  saveToCache(agents);
+
+  // Update timestamp
+  document.getElementById('agents-updated').textContent = 'Updated just now';
+  document.getElementById('agents-count').textContent = `(${allAgentsData.length})`;
+
+  // Render
+  renderAgentCards();
+}
+
+function refreshAgents() { loadMyAgents(); }
+
+// ── Render Cards ──
+function renderAgentCards() {
+  const listDiv = document.getElementById('agents-list');
+  if (allAgentsData.length === 0) {
+    listDiv.innerHTML = '<div class="glass rounded-xl p-4 text-center"><p class="text-slate-500 text-xs">No agents found. Deploy one or add by address above.</p></div>';
+    return;
+  }
+
+  // Show batch bar if > 1 agent
+  document.getElementById('batch-bar').classList.toggle('hidden', allAgentsData.length <= 1);
+
+  listDiv.innerHTML = allAgentsData.map((agent, i) => {
+    const health = getHealthScore(agent);
+    const bal = agent.balance > 0n ? parseFloat(ethers.formatEther(agent.balance)).toFixed(4) : '0';
+    const blocksLeft = agent.lockUntil ? Number(agent.lockUntil) - (agent.currentBlock || 0) : 0;
+    const hoursLeft = Math.max(0, Math.round(blocksLeft * 0.35 / 3600));
+    const isOwner = agent.isOwnerMatch !== false;
+    const addr = agent.address;
+    const selected = selectedAgents.has(addr.toLowerCase());
+
+    return `
+    <div class="glass rounded-xl p-2 md:p-3 cursor-pointer transition-all hover:border-purple-500/30" style="border:1px solid ${selected ? 'rgba(180,158,255,0.5)' : 'transparent'}" onclick="showAgentDetail('${addr}')">
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-2">
+          ${allAgentsData.length > 1 ? `<input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleAgentSelect('${addr}')" class="accent-purple-500" />` : ''}
+          <span class="w-2 h-2 rounded-full" style="background:${health.color}"></span>
+          <span class="text-xs font-semibold text-slate-200">${agent.label}</span>
+        </div>
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:${health.color}20;color:${health.color}">${health.icon} ${health.label}</span>
+      </div>
+      ${!isOwner ? '<div class="text-xs text-red-400 mb-1">⚠️ Owner mismatch</div>' : ''}
+      <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mt-1">
+        <span class="text-slate-500">Address <span class="mono text-slate-300">${addr.slice(0,8)}...${addr.slice(-6)}</span></span>
+        <span class="text-slate-500">Balance <span class="text-slate-300">${bal} RITUAL</span></span>
+        <span class="text-slate-500">Wakes <span class="text-slate-300">${agent.wakeCount || 0}</span></span>
+        ${hoursLeft > 0 ? `<span class="text-slate-500">Lock <span class="text-slate-300">${hoursLeft}h left</span></span>` : ''}
+        <span class="text-slate-600">${agent.source || 'unknown'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Agent Detail View ──
+function showAgentDetail(addr) {
+  const agent = allAgentsData.find(a => a.address.toLowerCase() === addr.toLowerCase());
+  if (!agent) return;
+  currentDetailAddr = addr;
+
+  document.getElementById('agents-list').classList.add('hidden');
+  document.getElementById('batch-bar').classList.add('hidden');
+  const detail = document.getElementById('agent-detail');
+  detail.classList.remove('hidden');
+
+  const health = getHealthScore(agent);
+  const cost = getCostEstimate(agent);
+  const bal = agent.balance > 0n ? parseFloat(ethers.formatEther(agent.balance)).toFixed(6) : '0';
+  const blocksLeft = agent.lockUntil ? Number(agent.lockUntil) - (agent.currentBlock || 0) : 0;
+  const hoursLeft = Math.max(0, Math.round(blocksLeft * 0.35 / 3600));
+  const daysLeft = (hoursLeft / 24).toFixed(1);
+
+  document.getElementById('detail-health').textContent = health.icon + ' ' + health.label;
+  document.getElementById('detail-health').style.background = health.color + '20';
+  document.getElementById('detail-health').style.color = health.color;
+  document.getElementById('detail-explorer-link').href = 'https://explorer.ritualfoundation.org/address/' + addr;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="space-y-2 text-xs">
+      <div class="flex justify-between"><span class="text-slate-500">Address</span><span class="mono text-slate-300">${addr}</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Owner</span><span class="mono text-slate-300">${agent.owner || 'N/A'}${agent.isOwnerMatch ? ' ✓' : ''}</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Balance</span><span class="text-slate-300">${bal} RITUAL</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Locked</span><span class="text-slate-300">${hoursLeft > 0 ? daysLeft + ' days (' + hoursLeft + 'h)' : 'Expired'}</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Running</span><span class="text-slate-300">${agent.isRunning ? '✓ Yes' : '✗ No'}</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Wakes</span><span class="text-slate-300">${agent.wakeCount || 0}</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Source</span><span class="text-slate-300">${agent.source || 'unknown'}</span></div>
+      ${agent.salt ? `<div class="flex justify-between"><span class="text-slate-500">Salt</span><span class="mono text-slate-300">${agent.salt}</span></div>` : ''}
+      <hr style="border-color:rgba(255,255,255,0.05)">
+      <div class="flex justify-between"><span class="text-slate-500">Est. Daily Cost</span><span class="text-slate-300">${cost.daily.toFixed(4)} RITUAL</span></div>
+      <div class="flex justify-between"><span class="text-slate-500">Est. Days Left</span><span class="text-slate-300">${cost.daysLeft.toFixed(1)} days</span></div>
+    </div>`;
+}
+
+function closeAgentDetail() {
+  document.getElementById('agent-detail').classList.add('hidden');
+  document.getElementById('agents-list').classList.remove('hidden');
+  document.getElementById('batch-bar').classList.toggle('hidden', allAgentsData.length <= 1);
+  currentDetailAddr = null;
+}
+
+async function detailAction(action) {
+  if (!currentDetailAddr) return;
+  if (action === 'stop') {
+    document.getElementById('m-stop-agent').value = currentDetailAddr;
+    switchTab('manage');
+    setTimeout(() => stopAgent(), 100);
+  } else if (action === 'deposit') {
+    document.getElementById('m-deposit-agent').value = currentDetailAddr;
+    switchTab('manage');
+  }
+}
+
+// ── Add Manual Agent ──
+async function addManualAgent() {
+  if (!signer || !userAddress) { alert('Connect wallet first'); return; }
+  const input = document.getElementById('m-add-agent');
+  const addr = input.value.trim();
+  if (!addr || !addr.startsWith('0x') || addr.length !== 42) { alert('Enter a valid address'); return; }
+
+  const resultDiv = document.getElementById('add-agent-result');
+  resultDiv.classList.remove('hidden');
+  resultDiv.innerHTML = '<span class="text-slate-400">Verifying...</span>';
+  resultDiv.style.background = 'rgba(180,158,255,0.08)';
+  resultDiv.style.border = '1px solid rgba(180,158,255,0.2)';
+
+  const rpcProvider = new ethers.JsonRpcProvider(RITUAL_RPC);
+  const verified = await verifyOnChain(addr, rpcProvider);
+
+  if (!verified.hasCode) {
+    resultDiv.innerHTML = '<span class="text-red-400">✗ No contract at this address</span>';
+    resultDiv.style.background = 'rgba(239,68,68,0.08)';
+    return;
+  }
+  if (!verified.isOwnerMatch) {
+    resultDiv.innerHTML = `<span class="text-red-400">✗ Owner mismatch. Owner: ${verified.owner?.slice(0,10)}...</span>`;
+    resultDiv.style.background = 'rgba(239,68,68,0.08)';
+    return;
+  }
+
+  // Add to data
+  verified.label = 'Agent @ ' + addr.slice(0, 8) + '...';
+  verified.source = 'manual';
+  verified.addedManually = true;
+  allAgentsData.push(verified);
+
+  // Save to cache
+  const agents = new Map();
+  for (const a of allAgentsData) agents.set(a.address.toLowerCase(), a);
+  saveToCache(agents);
+
+  resultDiv.innerHTML = `<span style="color:#22c55e">✓ Added! Balance: ${verified.balance > 0n ? parseFloat(ethers.formatEther(verified.balance)).toFixed(4) : '0'} RITUAL | Running: ${verified.isRunning ? 'Yes' : 'No'}</span>`;
+  resultDiv.style.background = 'rgba(34,197,94,0.08)';
+  input.value = '';
+
+  renderAgentCards();
+  document.getElementById('agents-count').textContent = `(${allAgentsData.length})`;
+}
+
+// ── Batch Selection ──
+function toggleAgentSelect(addr) {
+  const key = addr.toLowerCase();
+  if (selectedAgents.has(key)) selectedAgents.delete(key);
+  else selectedAgents.add(key);
+  document.getElementById('selected-count').textContent = selectedAgents.size;
+  renderAgentCards();
+}
+
+function toggleSelectAll() {
+  const checked = document.getElementById('select-all-agents').checked;
+  if (checked) allAgentsData.forEach(a => selectedAgents.add(a.address.toLowerCase()));
+  else selectedAgents.clear();
+  document.getElementById('selected-count').textContent = selectedAgents.size;
+  renderAgentCards();
+}
+
+async function batchStop() {
+  if (selectedAgents.size === 0) return;
+  if (!confirm(`Stop ${selectedAgents.size} agent(s)?`)) return;
+  switchTab('manage');
+  for (const addr of selectedAgents) {
+    document.getElementById('m-stop-agent').value = addr;
+    await stopAgent();
+  }
+}
+
+async function batchDeposit() {
+  if (selectedAgents.size === 0) return;
+  const amount = prompt('Deposit amount (RITUAL) per agent:', '0.1');
+  if (!amount) return;
+  switchTab('manage');
+  for (const addr of selectedAgents) {
+    document.getElementById('m-deposit-agent').value = addr;
+    document.getElementById('m-deposit-amount').value = amount;
+    await depositToWallet();
+  }
+}
+
+// ── Wallet Change Listener ──
+if (typeof window !== 'undefined' && window.ethereum) {
+  window.ethereum.on('accountsChanged', () => {
+    if (document.getElementById('panel-agents') && !document.getElementById('panel-agents').classList.contains('hidden')) {
+      loadMyAgents();
+    }
+  });
+  window.ethereum.on('chainChanged', () => {
+    checkRitualNetwork();
+    if (document.getElementById('panel-agents') && !document.getElementById('panel-agents').classList.contains('hidden')) {
+      loadMyAgents();
+    }
+  });
+}
 function copyEnv() {
   const text = document.getElementById('env-output').textContent;
   navigator.clipboard.writeText(text);
