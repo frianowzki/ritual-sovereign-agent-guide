@@ -757,6 +757,20 @@ async function deployAgent() {
   const schedulerTtl = parseInt(document.getElementById('d-schedttl').value) || 500;
   const fundAmount = parseFloat(document.getElementById('d-fund').value);
 
+  // Pre-flight: check for pending async job
+  const TRACKER_ABI = ["function hasPendingJobForSender(address sender) view returns (bool)"];
+  const TRACKER_ADDR = "0xC069FFCa0389f44eCA2C626e55491b0ab045AEF5";
+  try {
+    const tracker = new ethers.Contract(TRACKER_ADDR, TRACKER_ABI, provider);
+    const hasPending = await tracker.hasPendingJobForSender(userAddress);
+    if (hasPending) {
+      alert('You have a pending async job. Wait for it to expire (up to ~1 hour) or use a different wallet.');
+      btn.disabled = false;
+      btn.innerHTML = 'Deploy Sovereign Agent';
+      return;
+    }
+  } catch(e) { console.warn('Pending check failed:', e.message); }
+
   const scheduleTotal = freq * windowCalls;
   if (scheduleTotal > 10000) {
     alert(`Schedule too aggressive: ${freq} × ${windowCalls} = ${scheduleTotal} blocks. Must be < 10,000.`);
@@ -822,7 +836,7 @@ async function deployAgent() {
           if (rawReceipt) { receipt = rawReceipt; break; }
         } catch(e) {}
       }
-      if (!receipt) throw new Error('deployHarness timed out after 150s');
+      if (!receipt) throw new Error('deployHarness timed out after 150s — check explorer for tx status');
       const status = receipt.status === '0x1' || receipt.status === '0x01' || receipt.status === 1;
       if (!status) throw new Error('deployHarness reverted');
       log(termDiv, 'info', `Confirmed block ${parseInt(receipt.blockNumber, 16)}`);
@@ -866,7 +880,8 @@ async function deployAgent() {
           rolloverRetry: rolloverRetry,
           maxFeeGwei: maxFeeGwei,
           priorityFeeGwei: priorityFeeGwei,
-          cliType: 6
+          cliType: 6,
+          sender: userAddress
         })
       });
 
@@ -899,7 +914,7 @@ async function deployAgent() {
     } catch (simErr) {
       const simMsg = simErr.data?.message || simErr.message || 'unknown revert';
       log(termDiv, 'error', `Simulation REVERTED: ${simMsg}`);
-      throw new Error(`Simulation reverted: ${simMsg}`);
+      throw new Error(`Simulation reverted: ${simMsg}. Check: funds in RitualWallet, no pending jobs, correct params.`);
     }
 
     log(termDiv, 'cmd', 'Sending configureFundAndStart tx...');
@@ -933,7 +948,7 @@ async function deployAgent() {
     //   Phase 2 (async): TEE executor picks up job, encrypts secrets, configures agent
     // Phase 2 can take 1-5 minutes. We poll configured() to detect it.
     log(termDiv, 'cmd', 'TX confirmed. Waiting for TEE callback (async phase)...');
-    log(termDiv, 'info', 'This takes 1-5 min — the TEE executor must pick up and configure your agent.');
+    log(termDiv, 'info', 'This takes 1-5 min — the TEE executor must pick up and arm the scheduler.');
 
     updateProgress(95, 'Step 3/3 — Waiting for TEE callback');
 
