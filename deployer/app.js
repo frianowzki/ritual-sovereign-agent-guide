@@ -1130,7 +1130,11 @@ function initEncryptedText() {
       for (const { span, final } of spans) {
         span.textContent = final;
         span.classList.remove('scrambling');
+        span.classList.add('done');
+        span.style.minWidth = '';
       }
+      // Force a single reflow to stabilize layout
+      el.offsetHeight;
     }
   }, frameInterval);
 }
