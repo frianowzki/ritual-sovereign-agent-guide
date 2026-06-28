@@ -337,8 +337,21 @@
   /* But let wave SVGs keep their 200% width for seamless animation */
   .wavy-bg, .wavy-bg svg { max-width: none !important; }
 
+  /* Table-like layouts: stack on mobile */
+  .flex.justify-between { flex-wrap: wrap; gap: 2px; }
+  .flex.justify-between > span:last-child { 
+    text-align: right; 
+    max-width: 55%; 
+    word-break: break-all; 
+    overflow-wrap: break-word; 
+  }
   /* Budget grid: single column */
   #panel-deploy .grid-cols-1 { grid-template-columns: 1fr !important; }
+  /* Grid with md:grid-cols-2: single column */
+  .grid.md\:grid-cols-2 { grid-template-columns: 1fr !important; }
+  .grid.grid-cols-1 { grid-template-columns: 1fr !important; }
+  /* Truncate endpoint on mobile */
+  .truncate.max-w-\[200px\] { max-width: 140px !important; }
 
   /* Glass cards: smaller padding */
   .glass { border-radius: 0.75rem; }
