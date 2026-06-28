@@ -147,6 +147,8 @@
       background: linear-gradient(135deg, #c9b8ff, #b49eff, #d4b8ff);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
+      overflow: hidden;
+      max-width: 100%;
     }
     .encrypted-char {
       display: inline-block;
@@ -303,7 +305,7 @@
   /* Content: enough bottom padding to clear wave + footer */
   main { padding-bottom: 0 !important; }
   #panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env {
-    padding-bottom: 620px !important;
+    padding-bottom: 120px !important;
   }
 
   /* Tab bar: horizontally scrollable, no-wrap */
