@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sovereign-v1';
+const CACHE_NAME = 'sovereign-v2';
 const STATIC_ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.json'];
 
 self.addEventListener('install', event => {
@@ -18,7 +18,6 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Network-first for API calls, cache-first for static
   if (event.request.url.includes('rpc.ritualfoundation') || 
       event.request.url.includes('explorer.ritualfoundation') ||
       event.request.url.includes('registry.ritualfoundation')) {
