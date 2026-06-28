@@ -333,9 +333,15 @@
   /* Terminal: compact */
   .terminal { max-height: 100px; }
 
-  /* Prevent any horizontal overflow */
+  /* Prevent any horizontal overflow + lock scroll */
   * { box-sizing: border-box; }
-  body { overflow-x: hidden; }
+  body { overflow-x: hidden; touch-action: pan-y; }
+  main { overflow-x: hidden !important; touch-action: pan-y !important; }
+  #panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env { 
+    overflow-x: hidden !important; 
+    touch-action: pan-y !important; 
+  }
+  .glass { touch-action: pan-y !important; }
   /* But let wave SVGs keep their 200% width for seamless animation */
   .wavy-bg, .wavy-bg svg { max-width: none !important; }
 
