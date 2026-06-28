@@ -282,7 +282,7 @@
 /* ═══ MOBILE (max-width: 767px) ═══ */
 @media (max-width: 767px) {
   /* Wave: visible on mobile */
-  .wavy-bg { height: 600px !important; opacity: 0.4 !important; }
+  .wavy-bg { height: 600px !important; opacity: 0.7 !important; }
 
   /* Grid: single column */
   #panel-deploy .grid { grid-template-columns: 1fr !important; gap: 0.75rem; }
@@ -298,7 +298,7 @@
     border-color: rgba(255,255,255,0.1) !important;
     z-index: 2 !important;
   }
-  footer span { color: #c9b8ff !important; font-weight: 500; }
+  footer span { color: #fff !important; font-weight: 500; }
 
   /* Content: enough bottom padding to clear wave + footer */
   main { padding-bottom: 0 !important; }
