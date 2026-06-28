@@ -2107,8 +2107,13 @@ function applyMobileLayout() {
   if (!grid) return;
   if (isMobile) {
     grid.style.gridTemplateColumns = '1fr';
+    // Deploy button full width
+    const deployBtn = document.getElementById('deploy-btn');
+    if (deployBtn) deployBtn.style.width = '100%';
   } else {
     grid.style.gridTemplateColumns = '';
+    const deployBtn = document.getElementById('deploy-btn');
+    if (deployBtn) deployBtn.style.width = '';
   }
 }
 window.addEventListener('resize', applyMobileLayout);

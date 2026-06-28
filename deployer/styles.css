@@ -280,6 +280,56 @@
       color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em;
     }
 
+/* ═══ MOBILE (max-width: 767px) ═══ */
+@media (max-width: 767px) {
+  /* Grid: single column, deploy button full-width */
+  #panel-deploy .grid { grid-template-columns: 1fr !important; gap: 0.75rem; }
+  #panel-deploy .grid > div:last-child { order: 2; }
+
+  /* Deploy button full width on mobile */
+  #deploy-btn { width: 100% !important; }
+
+  /* No fixed footer on mobile */
+  footer { position: relative !important; bottom: auto !important; }
+
+  /* Wave: smaller, lighter on mobile */
+  .wavy-bg { height: 120px !important; opacity: 0.3 !important; }
+
+  /* No extra padding-bottom (no fixed footer) */
+  main, #panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env {
+    padding-bottom: 2rem !important;
+  }
+
+  /* Tab bar: horizontally scrollable */
+  main > .flex.justify-center {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.75rem;
+    padding-bottom: 0.25rem;
+  }
+  main > .flex.justify-center::-webkit-scrollbar { display: none; }
+
+  /* Glass cards: tighter padding */
+  .glass { border-radius: 0.75rem; }
+
+  /* rs-select dropdowns: touch-friendly, max height */
+  .rs-select-content { max-height: 240px; }
+
+  /* Hero text: smaller on mobile */
+  .encrypted-text { font-size: 1.6rem !important; }
+
+  /* Gooey input: compact */
+  .gooey-wrap { height: 48px; }
+  .gooey-submit { padding: 6px 14px; font-size: 12px; }
+
+  /* Budget grid: single column */
+  #panel-deploy .grid-cols-1 { grid-template-columns: 1fr !important; }
+
+  /* Terminal output: smaller max height */
+  .terminal { max-height: 100px; }
+}
+
 /* Desktop: extra gap after Agent Config */
 @media (min-width: 768px) {
   #panel-deploy .flex.flex-col > .glass:first-child { margin-bottom: 0.5rem; }

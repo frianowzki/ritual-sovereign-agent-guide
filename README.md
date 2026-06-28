@@ -58,6 +58,16 @@
 | 💰 Cost estimation | ✅ Live |
 | 🔄 Batch operations | ✅ Live |
 | 🌐 Network detection | ✅ Live |
+| 📱 Mobile-first responsive design | ✅ Live |
+| 🎨 Shadcn/ui Radix-style components | ✅ Live |
+| 🔐 PWA (offline support) | ✅ Live |
+| ⚠️ Error boundary + toast notifications | ✅ Live |
+| 🔄 Health polling (30s auto-refresh) | ✅ Live |
+| 🌐 Explorer verify links | ✅ Live |
+| 🎭 Encrypted text hero effect | ✅ Live |
+| 🫧 Gooey animated status input | ✅ Live |
+| 📊 Schedule validation (live totals) | ✅ Live |
+| ⚙️ Advanced Settings (gas, rollover, fees) | ✅ Live |
 
 ---
 
@@ -71,7 +81,7 @@ Deploy agents directly from your browser — connect wallet, configure, done.
 
 ```
 1. Connect wallet (MetaMask / Rabby)
-2. Configure: Salt, Prompt, HuggingFace, LLM Provider, Executor
+2. Configure: Salt, Prompt, HuggingFace, Executor, LLM Provider
 3. CLI Runtime: Select Crush (5) or ZeroClaw (6)
 4. Click Deploy → approve 2 transactions
 5. Check status → My Agents → Manage
@@ -110,11 +120,13 @@ Configure your agent with 5 steps:
 |------|------|----------|
 | 1. Agent Config | Salt (unique ID) + Prompt | ✅ |
 | 2. HuggingFace | Dataset repo + Write token | ✅ |
-| 3. LLM Provider | Provider + Model + API key | ✅ |
-| 4. TEE Executor | Select executor + CLI Runtime | ✅ |
+| 3. TEE Executor | Select executor + CLI Runtime | ✅ |
+| 4. LLM Provider | Provider + Model + API key | ✅ |
 | 5. Schedule & Budget | Frequency, calls, fund amount | ✅ |
 
 **Before deploy:** Run Smoke Test (validates HF + LLM) and LLM Test (verifies provider).
+
+**Advanced Settings:** Gas limits, rollover BPS, max/priority fee — hidden by default.
 
 ### My Agents Tab
 
@@ -129,8 +141,8 @@ All agents deployed on Ritual Chain, regardless of deployer:
 | 💰 Cost Tracker | Daily cost estimate + days remaining |
 | ⚡ Quick Actions | One-click stop, deposit, restart |
 | 📦 Batch Operations | Stop/deposit multiple agents at once |
-| 🔄 Wallet Detection | Auto-reload on wallet/network switch |
-| 🌐 Network Check | Warns if not on Ritual Chain |
+| 🔄 Health Polling | Auto-refresh every 30 seconds |
+| 🌐 Explorer Links | View on Explorer + Verify Source |
 
 ### Manage Tab
 
@@ -139,6 +151,28 @@ All agents deployed on Ritual Chain, regardless of deployer:
 | **Deposit** | `wallet.depositFor()` — fund RitualWallet |
 | **Restart/Reconfigure** | `stop()` → Deploy tab (same salt = same address) |
 | **Stop** | `stop()` on harness — cancels scheduler |
+
+### Check Status Tab
+
+Gooey animated input — enter any agent address to check on-chain status with live health scoring.
+
+---
+
+## ◦ Design System
+
+| Element | Value |
+|---------|-------|
+| **Primary** | `#b49eff` (lilac) |
+| **Secondary** | `#9f8ae8` |
+| **Tertiary** | `#7c6bc4` |
+| **Body Font** | Instrument Sans |
+| **Hero Font** | Instrument Serif |
+| **Code Font** | JetBrains Mono |
+| **Theme** | Dark (#000 background) |
+| **Components** | Frosted glass (`backdrop-filter: blur`) |
+| **Selects** | Custom rs-select (shadcn Radix-style) |
+| **Inputs** | Custom rs-input with focus ring |
+| **Animations** | Gooey blobs, encrypted text scramble, wave layers |
 
 ---
 
@@ -192,6 +226,7 @@ Runs on-chain via Ritual precompile. Set `LLM_PROVIDER=native` in `.env`.
 | `WINDOW_NUM_CALLS` | ✅ | `5` | Calls per window |
 | `FUND_AMOUNT` | ✅ | `0.25` | RITUAL to deposit (min 0.25) |
 | `LOCK_DURATION` | ✅ | `1728000` | Blocks to lock funds (7 days) |
+| `SCHEDULER_TTL` | | `500` | Scheduler time-to-live (blocks) |
 
 ---
 
@@ -295,7 +330,11 @@ Ritual Chain — **350ms block time**
 ```
 ritual-sovereign-agent-guide/
 ├── deployer/
-│   ├── index.html          # Sovereign Deployer UI
+│   ├── index.html          # Deployer UI (semantic HTML)
+│   ├── styles.css          # All CSS (shadcn-style, responsive)
+│   ├── app.js              # All JS (deploy, agents, status)
+│   ├── sw.js               # Service worker (network-first)
+│   ├── manifest.json       # PWA manifest
 │   ├── api/
 │   │   ├── encode.py       # ECIES encryption + ABI encoding
 │   │   └── executors.py    # TEE executor registry
