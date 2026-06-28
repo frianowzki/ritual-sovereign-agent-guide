@@ -354,14 +354,29 @@
   /* Truncate endpoint on mobile */
   .truncate.max-w-\[200px\] { max-width: 140px !important; }
 
-  /* Glass cards: full width on mobile */
+  /* Glass cards: compact on mobile */
   .glass { 
     border-radius: 0.75rem; 
     width: 100% !important; 
     max-width: 100% !important; 
     box-sizing: border-box; 
-    overflow: hidden; 
+    overflow: hidden;
+    padding: 0.375rem !important;
   }
+  .glass .space-y-2 > * + * { margin-top: 0.25rem !important; }
+  .glass h3 { font-size: 0.7rem !important; }
+  .glass label { font-size: 0.65rem !important; margin-bottom: 0.125rem !important; }
+  .glass input, .glass textarea { 
+    font-size: 0.75rem !important; 
+    padding: 0.25rem 0.5rem !important; 
+  }
+  .glass textarea { min-height: 2.5rem !important; }
+  .glass button { font-size: 0.65rem !important; padding: 0.2rem 0.5rem !important; }
+  .glass .step-badge { width: 18px !important; height: 18px !important; font-size: 0.6rem !important; }
+  .glass .flex.items-center.gap-2 { gap: 0.375rem !important; margin-bottom: 0.375rem !important; }
+  .glass p, .glass .text-xs { font-size: 0.65rem !important; }
+  .glass .btn-outline { padding: 0.2rem 0.5rem !important; font-size: 0.65rem !important; }
+  .glass select { font-size: 0.75rem !important; padding: 0.25rem 0.5rem !important; }
   /* Grid containers: full width */
   .grid { width: 100% !important; max-width: 100% !important; }
   /* Flex columns: full width */
