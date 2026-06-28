@@ -614,7 +614,8 @@
             </div>
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Scheduler TTL (blocks)</label>
-              <input id="d-schedttl" type="number" value="500" step="100" min="100" max="10000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" onchange="validateSchedule()" />
+              <input id="d-schedttl" type="number" value="500" step="100" min="30" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" onchange="validateSchedule()" />
+              <div class="text-[10px] mt-1" style="color:#64748b">Recommended: 30–500 blocks (~10s–3min)</div>
             </div>
             <!-- Live schedule validation -->
             <div id="schedule-validation" class="rounded-lg px-3 py-2 border" style="background:rgba(180,158,255,0.08);border-color:rgba(180,158,255,0.2)">
@@ -1306,17 +1307,18 @@ function validateSchedule() {
 
   totalEl.textContent = `${freq.toLocaleString()} × ${calls} = ${total.toLocaleString()} blocks`;
 
-  if (total > 10000) {
-    statusEl.textContent = 'Exceeds 10,000 limit';
-    statusEl.className = 'font-semibold text-red-400';
+  if (total > 100000) {
+    statusEl.textContent = 'Very high — verify gas costs';
+    statusEl.className = 'font-semibold';
+    statusEl.style.color = '#ef4444';
     totalEl.style.color = '#ef4444';
-  } else if (total > 7500) {
-    statusEl.textContent = 'Close to limit';
+  } else if (total > 10000) {
+    statusEl.textContent = 'High — double check fees';
     statusEl.className = 'font-semibold';
     statusEl.style.color = '#eab308';
     totalEl.style.color = '#eab308';
   } else {
-    statusEl.textContent = 'Safe range';
+    statusEl.textContent = 'Recommended range';
     statusEl.className = 'font-semibold';
     statusEl.style.color = '#b49eff';
     totalEl.style.color = '#b49eff';
@@ -1356,8 +1358,8 @@ async function deployAgent() {
   } catch(e) { console.warn('Pending check failed:', e.message); }
 
   const scheduleTotal = freq * windowCalls;
-  if (scheduleTotal > 10000) {
-    alert(`Schedule too aggressive: ${freq} × ${windowCalls} = ${scheduleTotal} blocks. Must be < 10,000.`);
+  if (scheduleTotal > 100000) {
+    alert(`Schedule extremely high: ${freq} × ${windowCalls} = ${scheduleTotal} blocks. Consider reducing to avoid excessive gas costs.`);
     return;
   }
   if (fundAmount < 0.25) {
