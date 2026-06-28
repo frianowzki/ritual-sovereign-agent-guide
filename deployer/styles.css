@@ -90,14 +90,14 @@
       background: rgba(10, 10, 15, 0.75) !important;
       border: 1px solid rgba(180,158,255,0.25) !important;
       border-radius: 16px;
-      padding: 0 16px 0 44px;
+      padding: 0 96px 0 44px;
       font-size: 14px;
       color: #e2e8f0 !important;
       font-family: 'JetBrains Mono', monospace;
       outline: none;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
-    .gooey-input-field::placeholder { color: #475569; font-family: 'Instrument Sans', sans-serif; }
+    .gooey-input-field::placeholder { color: #475569; font-family: 'Inter', sans-serif; }
     .gooey-input-field:focus {
       border-color: #b49eff !important;
       box-shadow: 0 0 0 3px rgba(180,158,255,0.12), 0 0 30px rgba(180,158,255,0.08);
