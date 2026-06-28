@@ -282,7 +282,7 @@
 /* ═══ MOBILE (max-width: 767px) ═══ */
 @media (max-width: 767px) {
   /* Wave: visible on mobile */
-  .wavy-bg { height: 100px !important; opacity: 0.4 !important; }
+  .wavy-bg { height: 150px !important; opacity: 0.4 !important; }
 
   /* Grid: single column */
   #panel-deploy .grid { grid-template-columns: 1fr !important; gap: 0.75rem; }
