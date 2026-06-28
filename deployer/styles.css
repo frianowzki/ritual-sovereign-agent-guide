@@ -353,18 +353,8 @@
   /* Truncate endpoint on mobile */
   .truncate.max-w-\[200px\] { max-width: 140px !important; }
 
-  /* Glass cards: full width on mobile */
-  .glass { 
-    border-radius: 0.75rem; 
-    width: 100% !important; 
-    max-width: 100% !important; 
-    box-sizing: border-box; 
-    overflow: hidden; 
-  }
-  /* Grid containers: full width */
-  .grid { width: 100% !important; max-width: 100% !important; }
-  /* Flex columns: full width */
-  .flex.flex-col { width: 100% !important; max-width: 100% !important; }
+  /* Glass cards: smaller padding */
+  .glass { border-radius: 0.75rem; }
 }
 
 /* Desktop: extra gap after Agent Config */
