@@ -150,14 +150,12 @@
     }
     .encrypted-char {
       display: inline-block;
-      min-width: 0.55em;
       transition: color 0.1s;
     }
     .encrypted-char.scrambling {
       -webkit-text-fill-color: #b49eff;
       animation: charFlicker 0.08s infinite;
     }
-    .encrypted-char.done { min-width: 0 !important; }
     @keyframes charFlicker {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }

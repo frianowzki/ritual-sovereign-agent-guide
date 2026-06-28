@@ -1089,6 +1089,11 @@ function initEncryptedText() {
   const frameInterval = 40;
   const totalFrames = Math.ceil(totalDuration / frameInterval);
 
+  // Lock hero container dimensions BEFORE replacing with spans
+  // This prevents any layout shift during/after animation
+  const rect = el.getBoundingClientRect();
+  el.style.minHeight = rect.height + 'px';
+
   // Wrap each character in a span
   el.innerHTML = '';
   const spans = [];
@@ -1097,7 +1102,6 @@ function initEncryptedText() {
     span.className = 'encrypted-char';
     if (finalText[i] === ' ') {
       span.innerHTML = '&nbsp;';
-      span.style.minWidth = '0.3em';
     } else {
       span.textContent = chars[Math.floor(Math.random() * chars.length)];
       span.classList.add('scrambling');
