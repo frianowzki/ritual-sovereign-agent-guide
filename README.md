@@ -68,6 +68,8 @@
 | 🫧 Gooey animated status input | ✅ Live |
 | 📊 Schedule validation (live totals) | ✅ Live |
 | ⚙️ Advanced Settings (gas, rollover, fees) | ✅ Live |
+| 🌊 Wavy background (3-layer SVG, responsive) | ✅ Live |
+| 📱 Touch-locked mobile scroll | ✅ Live |
 
 ---
 
@@ -165,14 +167,14 @@ Gooey animated input — enter any agent address to check on-chain status with l
 | **Primary** | `#b49eff` (lilac) |
 | **Secondary** | `#9f8ae8` |
 | **Tertiary** | `#7c6bc4` |
-| **Body Font** | Instrument Sans |
-| **Hero Font** | Instrument Serif |
+| **Body Font** | Inter |
+| **Hero Font** | DM Serif Display |
 | **Code Font** | JetBrains Mono |
 | **Theme** | Dark (#000 background) |
 | **Components** | Frosted glass (`backdrop-filter: blur`) |
 | **Selects** | Custom rs-select (shadcn Radix-style) |
 | **Inputs** | Custom rs-input with focus ring |
-| **Animations** | Gooey blobs, encrypted text scramble, wave layers |
+| **Animations** | Gooey blobs, character scramble, 3-layer wave background |
 
 ---
 
