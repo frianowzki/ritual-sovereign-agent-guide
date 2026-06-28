@@ -49,10 +49,10 @@
     #terminal .error, .terminal .error { color: #f85149; }
     #terminal .info, .terminal .info { color: #58a6ff; }
     #terminal .warn, .terminal .warn { color: #d29922; }
-    .step-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
-    .step-active { background: #b49eff; color: #000; }
-    .step-done { background: #059669; color: white; }
-    .step-pending { background: rgba(255,255,255,0.1); color: #64748b; }
+    .step-badge { display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #b49eff; }
+    .step-active { color: #b49eff; }
+    .step-done { color: #059669; }
+    .step-pending { color: #64748b; }
     .progress-bar { height: 3px; background: rgba(180,158,255,0.15); border-radius: 2px; overflow: hidden; }
     .progress-fill { height: 100%; background: #b49eff; border-radius: 2px; transition: width 0.3s; }
     .cli-type-option input:checked + div:first-child { color: #b49eff; }
@@ -188,7 +188,7 @@
     /* ═══ MAIN CONTENT Z-INDEX ═══ */
     main, header { position: relative; z-index: 1; }
     footer { position: relative; z-index: 2; }
-    #panel-deploy .grid .glass { flex: 1; min-height: 0; }
+    #panel-deploy .grid .glass { min-height: 0; }
     @media (min-width: 768px) {
       footer {
         position: fixed; bottom: 0; left: 0; width: 100%;
@@ -370,7 +370,7 @@
 
 
 
-    <div class="grid md:grid-cols-2 gap-3 items-start">
+    <div class="grid md:grid-cols-2 gap-3 items-stretch">
 
       <!-- Left: Config -->
       <div class="flex flex-col gap-3">
@@ -522,10 +522,10 @@
       </div>
 
       <!-- Right: LLM + Schedule + Budget + Deploy -->
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3" style="isolation:isolate">
 
         <!-- Step 4: LLM Provider -->
-        <div class="glass rounded-xl p-2 md:p-3">
+        <div class="glass rounded-xl p-2 md:p-3" style="position:relative;z-index:10">
           <div class="flex items-center gap-2 mb-3">
             <div class="step-badge step-active">❖</div>
             <h3 class="text-xs font-semibold" style="color:#b49eff">LLM Provider</h3>
