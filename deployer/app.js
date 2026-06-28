@@ -1093,6 +1093,8 @@ function initEncryptedText() {
   // This prevents any layout shift during/after animation
   const rect = el.getBoundingClientRect();
   el.style.minHeight = rect.height + 'px';
+  el.style.maxWidth = '100%';
+  el.style.overflow = 'hidden';
 
   // Wrap each character in a span
   el.innerHTML = '';
@@ -1132,6 +1134,9 @@ function initEncryptedText() {
       clearInterval(timer);
       // Replace all spans with plain text — eliminates width shifts entirely
       el.textContent = finalText;
+      // Remove overflow lock
+      el.style.maxWidth = '';
+      el.style.overflow = '';
       // Force reflow to stabilize
       el.offsetHeight;
     }
