@@ -148,18 +148,6 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .encrypted-char {
-      display: inline-block;
-      transition: color 0.1s;
-    }
-    .encrypted-char.scrambling {
-      -webkit-text-fill-color: #b49eff;
-      animation: charFlicker 0.08s infinite;
-    }
-    @keyframes charFlicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
     @media (max-width: 640px) {
       .encrypted-text { font-size: 1.8rem; }
     }

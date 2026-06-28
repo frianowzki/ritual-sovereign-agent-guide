@@ -1069,79 +1069,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ═══ ENCRYPTED TEXT HERO ═══
-  initEncryptedText();
-
   // ═══ SHADCN CUSTOM SELECTS ═══
   initCustomSelects();
 
 });
 
 // ═══════════════════════════════════════════════════════════
-//  ENCRYPTED TEXT — Aceternity-style character scramble
-// ═══════════════════════════════════════════════════════════
-function initEncryptedText() {
-  const el = document.getElementById('hero-title');
-  if (!el) return;
-  const finalText = el.getAttribute('data-text') || el.textContent;
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,./<>?~`';
-  const totalDuration = 1800;
-  const frameInterval = 40;
-  const totalFrames = Math.ceil(totalDuration / frameInterval);
-
-  // Lock hero container dimensions BEFORE replacing with spans
-  // This prevents any layout shift during/after animation
-  const rect = el.getBoundingClientRect();
-  el.style.width = rect.width + 'px';
-  el.style.minWidth = rect.width + 'px';
-  el.style.maxWidth = rect.width + 'px';
-  el.style.minHeight = rect.height + 'px';
-  el.style.overflow = 'hidden';
-
-  // Wrap each character in a span
-  el.innerHTML = '';
-  const spans = [];
-  for (let i = 0; i < finalText.length; i++) {
-    const span = document.createElement('span');
-    span.className = 'encrypted-char';
-    if (finalText[i] === ' ') {
-      span.innerHTML = '&nbsp;';
-    } else {
-      span.textContent = chars[Math.floor(Math.random() * chars.length)];
-      span.classList.add('scrambling');
-    }
-    el.appendChild(span);
-    spans.push({ span, final: finalText[i], isSpace: finalText[i] === ' ' });
-  }
-
-  // Calculate per-char delay based on position (left to right reveal)
-  let frame = 0;
-  const timer = setInterval(() => {
-    frame++;
-    const progress = frame / totalFrames;
-    for (let i = 0; i < spans.length; i++) {
-      const { span, final, isSpace } = spans[i];
-      if (isSpace) continue;
-      // Each char starts scrambling at a staggered time
-      const charStart = (i / spans.length) * 0.6;
-      const charEnd = charStart + 0.4;
-      if (progress >= charEnd) {
-        span.textContent = final;
-        span.classList.remove('scrambling');
-      } else if (progress >= charStart) {
-        span.textContent = chars[Math.floor(Math.random() * chars.length)];
-      }
-    }
-    if (frame >= totalFrames) {
-      clearInterval(timer);
-      // Replace all spans with plain text — eliminates width shifts entirely
-      el.textContent = finalText;
-      // Force reflow to stabilize
-      el.offsetHeight;
-    }
-  }, frameInterval);
-}
-
 function randomizeSalt() {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let salt = 'agent-';
