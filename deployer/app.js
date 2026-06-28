@@ -1134,9 +1134,6 @@ function initEncryptedText() {
       clearInterval(timer);
       // Replace all spans with plain text — eliminates width shifts entirely
       el.textContent = finalText;
-      // Remove overflow lock
-      el.style.maxWidth = '';
-      el.style.overflow = '';
       // Force reflow to stabilize
       el.offsetHeight;
     }
