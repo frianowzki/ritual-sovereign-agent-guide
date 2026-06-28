@@ -279,3 +279,8 @@
       padding: 8px 12px 4px; font-size: 11px; font-weight: 600;
       color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em;
     }
+
+/* Desktop: extra gap after Agent Config */
+@media (min-width: 768px) {
+  #panel-deploy .flex.flex-col > .glass:first-child { margin-bottom: 0.5rem; }
+}
