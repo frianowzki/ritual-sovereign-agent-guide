@@ -4,7 +4,6 @@
 const RITUAL_CHAIN_ID = 1979;
 const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
 const SOVEREIGN_FACTORY = '0x9dC4C054e53bCc4Ce0A0Ff09E890A7a8e817f304';
-const REGISTRY = '0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F';
 const TRACKER = '0xC069FFCa0389f44eCA2C626e55491b0ab045AEF5';
 const RITUAL_WALLET = '0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948';
 
@@ -424,6 +423,7 @@ async function deployAgent() {
 
   // Pre-flight: check for pending async job
   const TRACKER_ABI_LOCAL = ["function hasPendingJobForSender(address sender) view returns (bool)"];
+  
   try {
     const tracker = new ethers.Contract(TRACKER, TRACKER_ABI_LOCAL, provider);
     const hasPending = await tracker.hasPendingJobForSender(userAddress);
@@ -1926,9 +1926,7 @@ function initCustomSelects() {
     };
   });
 }
-</script>
 
-</body>
 // ═══════════════════════════════════════════════════════════
 //  IMPROVEMENTS v2 — Error Boundary + Health Polling + PWA
 // ═══════════════════════════════════════════════════════════
@@ -1947,7 +1945,6 @@ function safeAsync(fn) {
       return await fn(...args);
     } catch (err) {
       const msg = err?.reason?.message || err?.message || String(err);
-      // Friendly error mapping
       const friendly = {
         'user rejected action': 'Signature rejected by user.',
         'insufficient funds': 'Not enough RITUAL balance.',
@@ -1985,7 +1982,7 @@ function showToast(message, type = 'info') {
   const c = colors[type] || colors.info;
   Object.assign(toast.style, {
     position: 'fixed', top: '20px', right: '20px', zIndex: '9999',
-    background: c.bg, border: `1px solid ${c.border}`, color: c.text,
+    background: c.bg, border: '1px solid ' + c.border, color: c.text,
     padding: '12px 20px', borderRadius: '10px', fontSize: '13px',
     fontFamily: "'Instrument Sans', sans-serif", maxWidth: '400px',
     backdropFilter: 'blur(16px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
@@ -1997,7 +1994,6 @@ function showToast(message, type = 'info') {
   setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 5000);
 }
 
-// Add toast animation
 if (!document.getElementById('toast-style')) {
   const s = document.createElement('style');
   s.id = 'toast-style';
@@ -2007,7 +2003,6 @@ if (!document.getElementById('toast-style')) {
 
 // ─── Health Check Polling (My Agents) ───
 let healthPollInterval = null;
-
 function startHealthPolling() {
   if (healthPollInterval) return;
   healthPollInterval = setInterval(async () => {
@@ -2016,56 +2011,32 @@ function startHealthPolling() {
       stopHealthPolling();
       return;
     }
-    // Refresh agents data
     try { await refreshMyAgents(); } catch(e) {}
-  }, 30000); // Every 30 seconds
+  }, 30000);
 }
-
 function stopHealthPolling() {
   if (healthPollInterval) { clearInterval(healthPollInterval); healthPollInterval = null; }
 }
 
-// Auto-start when My Agents tab is shown
-const origShowTab = window.showTab;
-if (typeof origShowTab === 'function') {
-  window.showTab = function(...args) {
-    origShowTab.apply(this, args);
-    const tab = args[0];
-    if (tab === 'agents') startHealthPolling();
-    else stopHealthPolling();
-  };
-}
-
 // ─── Explorer Verification Link ───
 function getExplorerUrl(address) {
-  return `https://explorer.ritualfoundation.org/address/${address}`;
+  return 'https://explorer.ritualfoundation.org/address/' + address;
 }
-
 function getVerifyUrl(address) {
-  return `https://sourcify.dev/#/verify/${address}?chainIds=1979`;
+  return 'https://sourcify.dev/#/verify/' + address + '?chainIds=1979';
 }
-
 function appendVerificationUI(container, contractAddr) {
   if (!container || !contractAddr) return;
   const div = document.createElement('div');
   div.className = 'mt-3 rounded-lg px-3 py-2 border';
   div.style.cssText = 'background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2)';
-  div.innerHTML = `
-    <div class="flex flex-wrap items-center gap-2 text-xs">
-      <span style="color:#86efac;font-weight:600">✓ Deployed</span>
-      <span class="text-slate-500">·</span>
-      <a href="${getExplorerUrl(contractAddr)}" target="_blank" rel="noopener" 
-         class="underline hover:no-underline" style="color:#b49eff">
-        View on Explorer ↗
-      </a>
-      <span class="text-slate-500">·</span>
-      <a href="${getVerifyUrl(contractAddr)}" target="_blank" rel="noopener"
-         class="underline hover:no-underline" style="color:#b49eff">
-        Verify Source ↗
-      </a>
-    </div>
-    <div class="text-[10px] mt-1 text-slate-500 mono">${contractAddr}</div>
-  `;
+  div.innerHTML = '<div class="flex flex-wrap items-center gap-2 text-xs">' +
+    '<span style="color:#86efac;font-weight:600">✓ Deployed</span>' +
+    '<span class="text-slate-500">·</span>' +
+    '<a href="' + getExplorerUrl(contractAddr) + '" target="_blank" rel="noopener" class="underline hover:no-underline" style="color:#b49eff">View on Explorer ↗</a>' +
+    '<span class="text-slate-500">·</span>' +
+    '<a href="' + getVerifyUrl(contractAddr) + '" target="_blank" rel="noopener" class="underline hover:no-underline" style="color:#b49eff">Verify Source ↗</a>' +
+    '</div><div class="text-[10px] mt-1 text-slate-500 mono">' + contractAddr + '</div>';
   container.appendChild(div);
 }
 
@@ -2074,18 +2045,11 @@ function applyMobileLayout() {
   const isMobile = window.innerWidth < 768;
   const grid = document.querySelector('#panel-deploy .grid');
   if (!grid) return;
-  
   if (isMobile) {
-    // Mobile: single column, deploy button full width
     grid.style.gridTemplateColumns = '1fr';
-    const deployBtnWrap = document.getElementById('deploy-btn')?.parentElement;
-    if (deployBtnWrap) deployBtnWrap.style.gridColumn = '1';
   } else {
     grid.style.gridTemplateColumns = '';
-    const deployBtnWrap = document.getElementById('deploy-btn')?.parentElement;
-    if (deployBtnWrap) deployBtnWrap.style.gridColumn = '';
   }
 }
-
 window.addEventListener('resize', applyMobileLayout);
 window.addEventListener('DOMContentLoaded', applyMobileLayout);
