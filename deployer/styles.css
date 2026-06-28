@@ -3,7 +3,7 @@
     *::-webkit-scrollbar { display: none; }
     body { font-family: 'Instrument Sans', system-ui, sans-serif; background: var(--ritual-dark); color: #e2e8f0; overflow-x: hidden; overflow-y: auto; min-height: 100dvh; }
     code, .mono { font-family: 'JetBrains Mono', monospace; }
-    .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
+    .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); overflow: visible; }
     .glass-strong { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
     .tab-active { border-bottom: 2px solid #b49eff; color: #b49eff; }
     .tab-inactive { border-bottom: 2px solid transparent; color: #64748b; }

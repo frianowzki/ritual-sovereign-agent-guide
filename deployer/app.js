@@ -5,6 +5,7 @@ const RITUAL_CHAIN_ID = 1979;
 const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
 const SOVEREIGN_FACTORY = '0x9dC4C054e53bCc4Ce0A0Ff09E890A7a8e817f304';
 const TRACKER = '0xC069FFCa0389f44eCA2C626e55491b0ab045AEF5';
+const REGISTRY = '0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F';
 const RITUAL_WALLET = '0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948';
 
 const FACTORY_ABI = [
@@ -1915,6 +1916,9 @@ function initCustomSelects() {
       if (!sel.value) valEl.classList.add('placeholder');
       content.classList.add('open');
       trigger.classList.add('open');
+      // Raise parent glass card z-index so dropdown appears above siblings
+      const glassCard = wrap.closest('.glass');
+      if (glassCard) { glassCard.style.position = 'relative'; glassCard.style.zIndex = '20'; }
       // Prevent clipping from overflow-y:auto on panel-deploy
       const panel = document.getElementById('panel-deploy');
       if (panel) panel.style.overflow = 'visible';
@@ -1938,6 +1942,9 @@ function initCustomSelects() {
     function closeDropdown() {
       content.classList.remove('open');
       trigger.classList.remove('open');
+      // Reset parent glass card z-index
+      const glassCard = wrap.closest('.glass');
+      if (glassCard) { glassCard.style.zIndex = ''; }
       // Restore scroll after dropdown closes
       const panel = document.getElementById('panel-deploy');
       if (panel) { panel.style.overflow = ''; panel.classList.add('overflow-y-auto'); }
