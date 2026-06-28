@@ -282,52 +282,58 @@
 
 /* ═══ MOBILE (max-width: 767px) ═══ */
 @media (max-width: 767px) {
-  /* Grid: single column, deploy button full-width */
-  #panel-deploy .grid { grid-template-columns: 1fr !important; gap: 0.75rem; }
-  #panel-deploy .grid > div:last-child { order: 2; }
+  /* Wave: tiny decoration, not dominant */
+  .wavy-bg { height: 80px !important; opacity: 0.15 !important; }
 
-  /* Deploy button full width on mobile */
+  /* Grid: single column */
+  #panel-deploy .grid { grid-template-columns: 1fr !important; gap: 0.75rem; }
+
+  /* Deploy button full width */
   #deploy-btn { width: 100% !important; }
 
-  /* No fixed footer on mobile */
+  /* Footer: normal flow, not fixed */
   footer { position: relative !important; bottom: auto !important; }
 
-  /* Wave: smaller, lighter on mobile */
-  .wavy-bg { height: 120px !important; opacity: 0.3 !important; }
-
-  /* No extra padding-bottom (no fixed footer) */
-  main, #panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env {
-    padding-bottom: 2rem !important;
+  /* Content: enough bottom padding to clear wave + footer */
+  main { padding-bottom: 6rem !important; }
+  #panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env {
+    padding-bottom: 3rem !important;
   }
 
-  /* Tab bar: horizontally scrollable */
+  /* Tab bar: horizontally scrollable, no-wrap */
   main > .flex.justify-center {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     gap: 0.75rem;
     padding-bottom: 0.25rem;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
   }
   main > .flex.justify-center::-webkit-scrollbar { display: none; }
 
-  /* Glass cards: tighter padding */
-  .glass { border-radius: 0.75rem; }
-
-  /* rs-select dropdowns: touch-friendly, max height */
-  .rs-select-content { max-height: 240px; }
-
-  /* Hero text: smaller on mobile */
+  /* Hero: compact */
   .encrypted-text { font-size: 1.6rem !important; }
 
-  /* Gooey input: compact */
+  /* Gooey: compact */
   .gooey-wrap { height: 48px; }
   .gooey-submit { padding: 6px 14px; font-size: 12px; }
+
+  /* Dropdowns: touch-friendly */
+  .rs-select-content { max-height: 220px; }
+
+  /* Terminal: compact */
+  .terminal { max-height: 100px; }
+
+  /* Prevent any horizontal overflow */
+  * { max-width: 100%; box-sizing: border-box; }
+  body { overflow-x: hidden; }
 
   /* Budget grid: single column */
   #panel-deploy .grid-cols-1 { grid-template-columns: 1fr !important; }
 
-  /* Terminal output: smaller max height */
-  .terminal { max-height: 100px; }
+  /* Glass cards: smaller padding */
+  .glass { border-radius: 0.75rem; }
 }
 
 /* Desktop: extra gap after Agent Config */

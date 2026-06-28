@@ -2110,10 +2110,18 @@ function applyMobileLayout() {
     // Deploy button full width
     const deployBtn = document.getElementById('deploy-btn');
     if (deployBtn) deployBtn.style.width = '100%';
+    // Remove fixed footer padding
+    document.querySelectorAll('#panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env').forEach(p => {
+      p.style.paddingBottom = '3rem';
+    });
   } else {
     grid.style.gridTemplateColumns = '';
     const deployBtn = document.getElementById('deploy-btn');
     if (deployBtn) deployBtn.style.width = '';
+    // Restore desktop padding
+    document.querySelectorAll('#panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env').forEach(p => {
+      p.style.paddingBottom = '';
+    });
   }
 }
 window.addEventListener('resize', applyMobileLayout);
