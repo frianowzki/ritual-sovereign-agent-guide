@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sovereign-v2';
+const CACHE_NAME = 'sovereign-v3';
 const STATIC_ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.json'];
 
 self.addEventListener('install', event => {
@@ -25,8 +25,16 @@ self.addEventListener('fetch', event => {
       fetch(event.request).catch(() => caches.match(event.request))
     );
   } else {
+    // Network-first for static assets (JS/CSS/HTML) — updates propagate
     event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
+      fetch(event.request).then(response => {
+        // Cache successful responses for offline
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request))
     );
   }
 });
