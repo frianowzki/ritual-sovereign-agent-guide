@@ -1092,8 +1092,10 @@ function initEncryptedText() {
   // Lock hero container dimensions BEFORE replacing with spans
   // This prevents any layout shift during/after animation
   const rect = el.getBoundingClientRect();
+  el.style.width = rect.width + 'px';
+  el.style.minWidth = rect.width + 'px';
+  el.style.maxWidth = rect.width + 'px';
   el.style.minHeight = rect.height + 'px';
-  el.style.maxWidth = '100%';
   el.style.overflow = 'hidden';
 
   // Wrap each character in a span
