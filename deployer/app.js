@@ -1126,14 +1126,9 @@ function initEncryptedText() {
     }
     if (frame >= totalFrames) {
       clearInterval(timer);
-      // Ensure all chars are final
-      for (const { span, final } of spans) {
-        span.textContent = final;
-        span.classList.remove('scrambling');
-        span.classList.add('done');
-        span.style.minWidth = '';
-      }
-      // Force a single reflow to stabilize layout
+      // Replace all spans with plain text — eliminates width shifts entirely
+      el.textContent = finalText;
+      // Force reflow to stabilize
       el.offsetHeight;
     }
   }, frameInterval);
