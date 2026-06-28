@@ -1089,8 +1089,9 @@ function initEncryptedText() {
   const frameInterval = 40;
   const totalFrames = Math.ceil(totalDuration / frameInterval);
 
-  // Lock hero container dimensions BEFORE replacing with spans
-  // This prevents any layout shift during/after animation
+  // Lock hero dimensions to final text size — no layout shift ever
+  // Temporarily set final text to measure its true dimensions
+  el.textContent = finalText;
   const rect = el.getBoundingClientRect();
   el.style.width = rect.width + 'px';
   el.style.minWidth = rect.width + 'px';
