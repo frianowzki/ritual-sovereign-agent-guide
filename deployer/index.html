@@ -49,7 +49,7 @@
     #terminal .error, .terminal .error { color: #f85149; }
     #terminal .info, .terminal .info { color: #58a6ff; }
     #terminal .warn, .terminal .warn { color: #d29922; }
-    .step-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+    .step-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
     .step-active { background: #b49eff; color: #000; }
     .step-done { background: #059669; color: white; }
     .step-pending { background: rgba(255,255,255,0.1); color: #64748b; }
@@ -145,6 +145,12 @@
       z-index: 0; pointer-events: none; opacity: 0.5;
     }
     .wavy-bg svg { position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; }
+    @media (min-width: 768px) {
+      .wavy-bg {
+        position: fixed; bottom: 0; left: 0; width: 100%;
+        height: 280px; opacity: 0.45;
+      }
+    }
     .wavy-layer-1 { animation: waveScroll 25s linear infinite; }
     .wavy-layer-2 { animation: waveScroll 18s linear infinite reverse; opacity: 0.6; }
     .wavy-layer-3 { animation: waveScroll 30s linear infinite; opacity: 0.35; }
@@ -180,7 +186,119 @@
     }
 
     /* ═══ MAIN CONTENT Z-INDEX ═══ */
-    main, header, footer { position: relative; z-index: 1; }
+    main, header { position: relative; z-index: 1; }
+    footer { position: relative; z-index: 2; }
+    #panel-deploy .grid .glass { flex: 1; min-height: 0; }
+    @media (min-width: 768px) {
+      footer {
+        position: fixed; bottom: 0; left: 0; width: 100%;
+        z-index: 10;
+      }
+      main { padding-bottom: 330px; }
+      #panel-deploy, #panel-agents, #panel-manage, #panel-status, #panel-env {
+        padding-bottom: 330px;
+      }
+    }
+
+    /* ═══ SHADCN-STYLE COMPONENTS ═══ */
+    :root {
+      --background: #0a0a0f;
+      --foreground: #e2e8f0;
+      --popover: #111118;
+      --primary: #b49eff;
+      --primary-foreground: #000;
+      --accent: rgba(180,158,255,0.1);
+      --accent-foreground: #e2e8f0;
+      --muted-foreground: #64748b;
+      --input: rgba(255,255,255,0.1);
+      --ring: #b49eff;
+      --border: rgba(255,255,255,0.1);
+    }
+
+    /* ═══ RS-INPUT ═══ */
+    .rs-input {
+      height: 40px;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--foreground);
+      font-size: 14px;
+      padding: 0 12px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    .rs-input::placeholder { color: var(--muted-foreground); }
+    .rs-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--background), 0 0 0 4px rgba(180,158,255,0.25);
+    }
+    .rs-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    input[type="number"].rs-input { -moz-appearance: textfield; }
+    input[type="number"].rs-input::-webkit-inner-spin-button,
+    input[type="number"].rs-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* ═══ RS-SELECT ═══ */
+    .rs-select { position: relative; width: 100%; }
+    .rs-select-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; height: 40px;
+      border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--foreground);
+      font-size: 14px; padding: 0 12px;
+      cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none; font-family: inherit;
+      text-align: left;
+    }
+    .rs-select-trigger:hover { border-color: rgba(255,255,255,0.2); }
+    .rs-select-trigger:focus, .rs-select-trigger.open {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--background), 0 0 0 4px rgba(180,158,255,0.25);
+    }
+    .rs-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .rs-select-value.placeholder { color: var(--muted-foreground); }
+    .rs-select-chevron {
+      width: 16px; height: 16px; flex-shrink: 0; margin-left: 8px;
+      opacity: 0.5; transition: transform 0.2s;
+    }
+    .rs-select-trigger.open .rs-select-chevron { transform: rotate(180deg); }
+    .rs-select-content {
+      position: absolute; top: 100%; left: 0; width: 100%;
+      margin-top: 4px; border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--popover);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      max-height: 288px; overflow-y: auto; overflow-x: hidden;
+      z-index: 50; opacity: 0; transform: translateY(-4px);
+      pointer-events: none; transition: opacity 0.15s, transform 0.15s;
+    }
+    .rs-select-content.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .rs-select-content::-webkit-scrollbar { width: 6px; }
+    .rs-select-content::-webkit-scrollbar-track { background: transparent; }
+    .rs-select-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .rs-select-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; font-size: 14px; cursor: pointer;
+      color: var(--foreground); transition: background 0.1s;
+      position: relative;
+    }
+    .rs-select-item:first-child { border-radius: 6px 6px 0 0; }
+    .rs-select-item:last-child { border-radius: 0 0 6px 6px; }
+    .rs-select-item:hover { background: var(--accent); }
+    .rs-select-item.selected {
+      background: rgba(180,158,255,0.08);
+      color: var(--primary);
+    }
+    .rs-select-item .check {
+      width: 14px; height: 14px; opacity: 0; flex-shrink: 0;
+      color: var(--primary);
+    }
+    .rs-select-item.selected .check { opacity: 1; }
+    .rs-select-group-label {
+      padding: 8px 12px 4px; font-size: 11px; font-weight: 600;
+      color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -252,15 +370,15 @@
 
 
 
-    <div class="grid md:grid-cols-2 gap-3">
+    <div class="grid md:grid-cols-2 gap-3 items-start">
 
       <!-- Left: Config -->
-      <div class="space-y-3">
+      <div class="flex flex-col gap-3">
 
         <!-- Step 1: Agent Config -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">1</div>
+            <div class="step-badge step-active">❖</div>
             <h3 class="text-xs font-semibold" style="color:#b49eff">Agent Config</h3>
           </div>
           <div class="space-y-2">
@@ -286,7 +404,7 @@
         <!-- Step 2: HuggingFace -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">2</div>
+            <div class="step-badge step-active">❖</div>
             <h3 class="text-xs font-semibold" style="color:#b49eff">HuggingFace</h3>
           </div>
           <div class="space-y-2">
@@ -342,52 +460,25 @@
           </div>
         </div>
 
-        <!-- Step 3: LLM Provider -->
+        <!-- Step 3: TEE Executor -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">3</div>
-            <h3 class="text-xs font-semibold" style="color:#b49eff">LLM Provider</h3>
-          </div>
-          <div class="space-y-2">
-            <div>
-              <label class="text-xs text-slate-500 mb-1 block">Provider</label>
-              <select id="d-provider" class="w-full rounded-lg px-3 py-2 text-sm" onchange="updateModelOptions()">
-                <option value="native" selected>Ritual Native (no API key)</option>
-                <option value="openrouter">OpenRouter</option>
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic</option>
-                <option value="gemini">Google Gemini</option>
-              </select>
-            </div>
-            <div id="apikey-group" style="display:none">
-              <label class="text-xs text-slate-500 mb-1 block">API Key</label>
-              <input id="d-apikey" type="password" placeholder="sk-or-v1-..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-
-            </div>
-            <div>
-              <label class="text-xs text-slate-500 mb-1 block">Model</label>
-              <div class="flex gap-2">
-                <select id="d-model" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono"></select>
-                <button onclick="simulateLLM()" id="llm-test-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs flex-shrink-0" title="Test this provider + model">Test</button>
-              </div>
-              <div id="llm-test-result" class="hidden mt-1.5 rounded-lg px-2.5 py-1.5 text-xs"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 4: TEE Executor -->
-        <div class="glass rounded-xl p-2 md:p-3">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">4</div>
+            <div class="step-badge step-active">❖</div>
             <h3 class="text-xs font-semibold" style="color:#b49eff">TEE Executor</h3>
             <button onclick="refreshExecutors()" class="btn-outline rounded-lg px-2 py-0.5 text-xs ml-auto" id="executor-refresh-btn">Refresh</button>
           </div>
           <div class="space-y-2">
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Select Executor</label>
-              <select id="d-executor" class="w-full rounded-lg px-3 py-2 text-sm mono">
-                <option value="">Loading executors...</option>
-              </select>
+              <div class="rs-select" data-select="d-executor">
+                <button type="button" class="rs-select-trigger">
+                  <span class="rs-select-value placeholder">Loading executors...</span>
+                  <svg class="rs-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <select id="d-executor" class="hidden" style="display:none">
+                  <option value="">Loading executors...</option>
+                </select>
+              </div>
               <p id="executor-count" class="text-xs text-slate-500 mt-1"></p>
             </div>
             <div id="executor-details" class="hidden rounded-lg px-3 py-2 border" style="background:rgba(180,158,255,0.08);border-color:rgba(180,158,255,0.2)">
@@ -427,46 +518,103 @@
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- Right: Schedule + Budget + Deploy -->
-      <div class="space-y-3">
+      <!-- Right: LLM + Schedule + Budget + Deploy -->
+      <div class="flex flex-col gap-3">
+
+        <!-- Step 4: LLM Provider -->
+        <div class="glass rounded-xl p-2 md:p-3">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="step-badge step-active">❖</div>
+            <h3 class="text-xs font-semibold" style="color:#b49eff">LLM Provider</h3>
+          </div>
+          <div class="space-y-2">
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">Provider</label>
+              <div class="rs-select" data-select="d-provider">
+                <button type="button" class="rs-select-trigger">
+                  <span class="rs-select-value">Ritual Native (no API key)</span>
+                  <svg class="rs-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <select id="d-provider" class="hidden" style="display:none" onchange="updateModelOptions()">
+                  <option value="native" selected>Ritual Native (no API key)</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="gemini">Google Gemini</option>
+                </select>
+              </div>
+            </div>
+            <div id="apikey-group" style="display:none">
+              <label class="text-xs text-slate-500 mb-1 block">API Key</label>
+              <input id="d-apikey" type="password" placeholder="sk-or-v1-..." class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">Model</label>
+              <div class="flex gap-2">
+                <div class="rs-select" data-select="d-model">
+                  <button type="button" class="rs-select-trigger">
+                    <span class="rs-select-value placeholder">Select model...</span>
+                    <svg class="rs-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                  </button>
+                  <select id="d-model" class="hidden" style="display:none"></select>
+                </div>
+                <button onclick="simulateLLM()" id="llm-test-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs flex-shrink-0" title="Test this provider + model">Test</button>
+              </div>
+              <div id="llm-test-result" class="hidden mt-1.5 rounded-lg px-2.5 py-1.5 text-xs"></div>
+            </div>
+          </div>
+        </div>
 
         <!-- Step 5: Schedule & Budget -->
         <div class="glass rounded-xl p-2 md:p-3">
           <div class="flex items-center gap-2 mb-3">
-            <div class="step-badge step-active">5</div>
+            <div class="step-badge step-active">❖</div>
             <h3 class="text-xs font-semibold" style="color:#b49eff">Schedule & Budget</h3>
           </div>
           <div class="space-y-2">
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Execution Frequency</label>
-              <select id="d-freq" class="w-full rounded-lg px-3 py-2 text-sm" onchange="validateSchedule()">
-                <option value="100">~35 sec (100 blocks)</option>
-                <option value="180">~1 min (180 blocks)</option>
-                <option value="300">~1.8 min (300 blocks)</option>
-                <option value="500">~2.9 min (500 blocks)</option>
-                <option value="1000">~5.8 min (1,000 blocks)</option>
-                <option value="2000" selected>~12 min (2,000 blocks)</option>
-                <option value="5000">~29 min (5,000 blocks)</option>
-              </select>
+              <div class="rs-select" data-select="d-freq">
+                <button type="button" class="rs-select-trigger">
+                  <span class="rs-select-value">~12 min (2,000 blocks)</span>
+                  <svg class="rs-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <select id="d-freq" class="hidden" style="display:none" onchange="validateSchedule()">
+                  <option value="100">~35 sec (100 blocks)</option>
+                  <option value="180">~1 min (180 blocks)</option>
+                  <option value="300">~1.8 min (300 blocks)</option>
+                  <option value="500">~2.9 min (500 blocks)</option>
+                  <option value="1000">~5.8 min (1,000 blocks)</option>
+                  <option value="2000" selected>~12 min (2,000 blocks)</option>
+                  <option value="5000">~29 min (5,000 blocks)</option>
+                </select>
+              </div>
             </div>
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Calls per Window</label>
-              <select id="d-window" class="w-full rounded-lg px-3 py-2 text-sm" onchange="validateSchedule()">
-                <option value="1">1 call</option>
-                <option value="2">2 calls</option>
-                <option value="3">3 calls</option>
-                <option value="5" selected>5 calls</option>
-                <option value="10">10 calls</option>
-                <option value="15">15 calls</option>
-                <option value="20">20 calls</option>
-                <option value="25">25 calls</option>
-              </select>
+              <div class="rs-select" data-select="d-window">
+                <button type="button" class="rs-select-trigger">
+                  <span class="rs-select-value">5 calls</span>
+                  <svg class="rs-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <select id="d-window" class="hidden" style="display:none" onchange="validateSchedule()">
+                  <option value="1">1 call</option>
+                  <option value="2">2 calls</option>
+                  <option value="3">3 calls</option>
+                  <option value="5" selected>5 calls</option>
+                  <option value="10">10 calls</option>
+                  <option value="15">15 calls</option>
+                  <option value="20">20 calls</option>
+                  <option value="25">25 calls</option>
+                </select>
+              </div>
             </div>
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Scheduler TTL (blocks)</label>
-              <input id="d-schedttl" type="number" value="500" step="100" min="100" max="10000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" onchange="validateSchedule()" />
+              <input id="d-schedttl" type="number" value="500" step="100" min="100" max="10000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" onchange="validateSchedule()" />
             </div>
             <!-- Live schedule validation -->
             <div id="schedule-validation" class="rounded-lg px-3 py-2 border" style="background:rgba(180,158,255,0.08);border-color:rgba(180,158,255,0.2)">
@@ -485,31 +633,37 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <label class="text-xs text-slate-500 mb-1 block">Fund Amount (RITUAL)</label>
-                  <input id="d-fund" type="number" value="0.25" step="0.01" min="0.25" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                  <input id="d-fund" type="number" value="0.25" step="0.01" min="0.25" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   <p class="text-xs text-red-400 mt-0.5">Minimum 0.25</p>
                 </div>
                 <div>
                   <label class="text-xs text-slate-500 mb-1 block">Max Budget (RITUAL)</label>
-                  <input id="d-maxbudget" type="number" value="0.5" step="0.01" min="0.01" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                  <input id="d-maxbudget" type="number" value="0.5" step="0.01" min="0.01" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                 </div>
               </div>
               <div class="mt-2">
                 <label class="text-xs text-slate-500 mb-1 block">Lock Duration</label>
-                <select id="d-lockduration" class="w-full rounded-lg px-3 py-2 text-sm">
-                  <option value="20571">2 hours (20,571 blocks)</option>
-                  <option value="41143">4 hours (41,143 blocks)</option>
-                  <option value="61714">6 hours (61,714 blocks)</option>
-                  <option value="123429">12 hours (123,429 blocks)</option>
-                  <option value="246857">1 day (246,857 blocks)</option>
-                  <option value="740571">3 days (740,571 blocks)</option>
-                  <option value="1728000" selected>7 days (1,728,000 blocks)</option>
-                  <option value="3702857">15 days (3,702,857 blocks)</option>
-                  <option value="7405714">30 days (7,405,714 blocks)</option>
-                  <option value="22217143">3 months (22,217,143 blocks)</option>
-                  <option value="44434286">6 months (44,434,286 blocks)</option>
-                  <option value="66651429">9 months (66,651,429 blocks)</option>
-                  <option value="88868571">12 months (88,868,571 blocks)</option>
-                </select>
+                <div class="rs-select" data-select="d-lockduration">
+                  <button type="button" class="rs-select-trigger">
+                    <span class="rs-select-value">7 days (1,728,000 blocks)</span>
+                    <svg class="rs-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                  </button>
+                  <select id="d-lockduration" class="hidden" style="display:none">
+                    <option value="20571">2 hours (20,571 blocks)</option>
+                    <option value="41143">4 hours (41,143 blocks)</option>
+                    <option value="61714">6 hours (61,714 blocks)</option>
+                    <option value="123429">12 hours (123,429 blocks)</option>
+                    <option value="246857">1 day (246,857 blocks)</option>
+                    <option value="740571">3 days (740,571 blocks)</option>
+                    <option value="1728000" selected>7 days (1,728,000 blocks)</option>
+                    <option value="3702857">15 days (3,702,857 blocks)</option>
+                    <option value="7405714">30 days (7,405,714 blocks)</option>
+                    <option value="22217143">3 months (22,217,143 blocks)</option>
+                    <option value="44434286">6 months (44,434,286 blocks)</option>
+                    <option value="66651429">9 months (66,651,429 blocks)</option>
+                    <option value="88868571">12 months (88,868,571 blocks)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -520,35 +674,35 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Gas Limit (configure)</label>
-                    <input id="d-gaslimit" type="number" value="5000000" step="500000" min="3000000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-gaslimit" type="number" value="5000000" step="500000" min="3000000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Deploy Gas Limit</label>
-                    <input id="d-deploygas" type="number" value="3500000" step="500000" min="3000000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-deploygas" type="number" value="3500000" step="500000" min="3000000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Scheduler Gas</label>
-                    <input id="d-schedgas" type="number" value="800000" step="100000" min="500000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-schedgas" type="number" value="800000" step="100000" min="500000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Rollover BPS</label>
-                    <input id="d-rolloverbps" type="number" value="5000" step="500" min="1000" max="9000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-rolloverbps" type="number" value="5000" step="500" min="1000" max="9000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Rollover Retry</label>
-                    <input id="d-rolloverretry" type="number" value="1" min="1" max="10" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-rolloverretry" type="number" value="1" min="1" max="10" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Max Fee (gwei)</label>
-                    <input id="d-maxfee" type="number" value="20" step="5" min="1" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-maxfee" type="number" value="20" step="5" min="1" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                   <div>
                     <label class="text-xs text-slate-500 mb-1 block">Priority Fee (gwei)</label>
-                    <input id="d-priorityfee" type="number" value="1" step="0.5" min="0.1" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+                    <input id="d-priorityfee" type="number" value="1" step="0.5" min="0.1" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
                   </div>
                 </div>
               </div>
@@ -565,23 +719,26 @@
           </div>
         </div>
 
-        <!-- Deploy Button -->
-        <button id="deploy-btn" onclick="deployAgent()" class="btn-primary w-full rounded-xl py-3 font-semibold text-sm transition">
-          Deploy Sovereign Agent
-        </button>
-
-        <!-- Progress -->
-        <div id="deploy-progress" class="hidden glass rounded-xl p-3">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xs font-semibold" style="color:#b49eff">Deploy Progress</h3>
-            <span id="deploy-step-label" class="text-xs text-slate-500">Step 1/3</span>
-          </div>
-          <div class="progress-bar mb-3">
-            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
-          </div>
-          <div id="deploy-terminal" class="terminal rounded-lg p-2 text-xs mono max-h-32 overflow-y-auto"></div>
+        <!-- Deploy Button — inside right column -->
+        <div class="mt-3">
+          <button id="deploy-btn" onclick="deployAgent()" class="btn-primary w-full rounded-xl py-3 font-semibold text-sm transition">
+            Deploy Sovereign Agent
+          </button>
         </div>
+
       </div>
+    </div>
+
+    <!-- Deploy Progress — full width below grid -->
+    <div id="deploy-progress" class="hidden glass rounded-xl p-3 mt-3">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-xs font-semibold" style="color:#b49eff">Deploy Progress</h3>
+        <span id="deploy-step-label" class="text-xs text-slate-500">Step 1/3</span>
+      </div>
+      <div class="progress-bar mb-3">
+        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+      </div>
+      <div id="deploy-terminal" class="terminal rounded-lg p-2 text-xs mono max-h-32 overflow-y-auto"></div>
     </div>
   </div>
 
@@ -601,7 +758,7 @@
           </div>
         </div>
         <div class="flex gap-2">
-          <input id="m-add-agent" type="text" placeholder="Add agent by address (0x...)" class="flex-1 rounded-lg px-3 py-1.5 text-xs mono" style="background:rgba(255,255,255,0.05);border:1px solid rgba(180,158,255,0.2);color:#e2e8f0" />
+          <input id="m-add-agent" type="text" placeholder="Add agent by address (0x...)" class="rs-input flex-1 rounded-lg px-3 py-1.5 text-xs mono" style="background:rgba(255,255,255,0.05);border:1px solid rgba(180,158,255,0.2);color:#e2e8f0" />
           <button onclick="addManualAgent()" id="add-agent-btn" class="btn-outline rounded-lg px-3 py-1.5 text-xs">Add</button>
         </div>
         <div id="add-agent-result" class="hidden mt-2 rounded-lg p-2 text-xs"></div>
@@ -650,15 +807,15 @@
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
-            <input id="m-deposit-agent" type="text" placeholder="0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+            <input id="m-deposit-agent" type="text" placeholder="0x..." class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Amount (RITUAL)</label>
-            <input id="m-deposit-amount" type="number" value="0.1" step="0.01" min="0.01" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+            <input id="m-deposit-amount" type="number" value="0.1" step="0.01" min="0.01" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Lock Duration (blocks)</label>
-            <input id="m-deposit-lock" type="number" value="100000" step="1000" min="1000" class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+            <input id="m-deposit-lock" type="number" value="100000" step="1000" min="1000" class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
             <p class="text-xs text-slate-600 mt-0.5">~40.3 hours (100,000 blocks)</p>
           </div>
           <button onclick="depositToWallet()" id="deposit-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs">Deposit</button>
@@ -672,7 +829,7 @@
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
-            <input id="m-restart-agent" type="text" placeholder="0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+            <input id="m-restart-agent" type="text" placeholder="0x..." class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
           <button onclick="restartAgent()" id="restart-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#eab308,#f59e0b)">Check & Restart</button>
         </div>
@@ -685,7 +842,7 @@
         <div class="space-y-2">
           <div>
             <label class="text-xs text-slate-500 mb-1 block">Agent Address</label>
-            <input id="m-stop-agent" type="text" placeholder="0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
+            <input id="m-stop-agent" type="text" placeholder="0x..." class="rs-input w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
           </div>
           <button onclick="stopAgent()" id="stop-btn" class="btn-primary w-full rounded-xl py-2 font-semibold text-xs" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Stop Agent</button>
         </div>
@@ -1004,6 +1161,9 @@ function updateModelOptions() {
   const sel = document.getElementById('d-model');
   sel.innerHTML = MODELS[p].map(m => `<option value="${m}">${m}</option>`).join('');
   document.getElementById('apikey-group').style.display = p === 'native' ? 'none' : '';
+  // Refresh custom select UI
+  const wrap = sel.closest('.rs-select');
+  if (wrap && wrap._refreshSelect) wrap._refreshSelect();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1774,6 +1934,9 @@ async function refreshExecutors() {
     // Show details for first executor
     showExecutorDetails(0);
     sel.addEventListener('change', () => showExecutorDetails(parseInt(sel.value)));
+    // Refresh custom select UI
+    const wrap = sel.closest('.rs-select');
+    if (wrap && wrap._refreshSelect) wrap._refreshSelect();
     
   } catch (err) {
     sel.innerHTML = `<option value="">Error: ${err.message}</option>`;
@@ -1829,6 +1992,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ═══ ENCRYPTED TEXT HERO ═══
   initEncryptedText();
+
+  // ═══ SHADCN CUSTOM SELECTS ═══
+  initCustomSelects();
 
 });
 
@@ -2570,6 +2736,118 @@ document.getElementById('d-lockduration').addEventListener('change', updateEstim
 updateEstimate();
 validateSchedule();
 autoReconnect();
+
+// ═══════════════════════════════════════════════════════════
+//  SHADCN CUSTOM SELECT (rs-select)
+// ═══════════════════════════════════════════════════════════
+function initCustomSelects() {
+  document.querySelectorAll('.rs-select').forEach(wrap => {
+    const sel = wrap.querySelector('select');
+    if (!sel) return;
+    const trigger = wrap.querySelector('.rs-select-trigger');
+    const valEl = wrap.querySelector('.rs-select-value');
+
+    // Build dropdown content
+    const content = document.createElement('div');
+    content.className = 'rs-select-content';
+    wrap.appendChild(content);
+    const checkSvg = '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    function buildItems() {
+      content.innerHTML = '';
+      Array.from(sel.options).forEach((opt, i) => {
+        if (opt.disabled && !opt.value) return; // skip placeholder
+        const item = document.createElement('div');
+        item.className = 'rs-select-item';
+        item.setAttribute('data-value', opt.value);
+        item.setAttribute('data-index', i);
+        if (opt.value === sel.value) item.classList.add('selected');
+        item.innerHTML = `<span>${opt.text}</span>${checkSvg}`;
+        item.addEventListener('click', () => {
+          sel.value = opt.value;
+          valEl.textContent = opt.text;
+          valEl.classList.remove('placeholder');
+          content.querySelectorAll('.rs-select-item').forEach(it => it.classList.remove('selected'));
+          item.classList.add('selected');
+          closeDropdown();
+          // Fire change event
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        content.appendChild(item);
+      });
+    }
+
+    function openDropdown() {
+      buildItems();
+      // Set current
+      valEl.textContent = sel.options[sel.selectedIndex]?.text || '';
+      if (!sel.value) valEl.classList.add('placeholder');
+      content.classList.add('open');
+      trigger.classList.add('open');
+      // Prevent clipping from overflow-y:auto on panel-deploy
+      const panel = document.getElementById('panel-deploy');
+      if (panel) panel.style.overflow = 'visible';
+      // Position above if near bottom
+      requestAnimationFrame(() => {
+        const rect = content.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight - 20) {
+          content.style.bottom = '100%';
+          content.style.top = 'auto';
+          content.style.marginTop = '0';
+          content.style.marginBottom = '4px';
+        } else {
+          content.style.bottom = 'auto';
+          content.style.top = '100%';
+          content.style.marginTop = '4px';
+          content.style.marginBottom = '0';
+        }
+      });
+    }
+
+    function closeDropdown() {
+      content.classList.remove('open');
+      trigger.classList.remove('open');
+      // Restore scroll after dropdown closes
+      const panel = document.getElementById('panel-deploy');
+      if (panel) { panel.style.overflow = ''; panel.classList.add('overflow-y-auto'); }
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = content.classList.contains('open');
+      // Close all others first
+      document.querySelectorAll('.rs-select-content.open').forEach(c => c.classList.remove('open'));
+      document.querySelectorAll('.rs-select-trigger.open').forEach(t => t.classList.remove('open'));
+      if (!isOpen) openDropdown();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) closeDropdown();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeDropdown();
+    });
+
+    // Set initial display
+    if (sel.value) {
+      valEl.textContent = sel.options[sel.selectedIndex]?.text || '';
+      valEl.classList.remove('placeholder');
+    } else if (sel.options[0]) {
+      valEl.textContent = sel.options[0].text;
+      valEl.classList.add('placeholder');
+    }
+
+    // Expose refresh method for dynamic selects (like d-executor, d-model)
+    wrap._refreshSelect = function() {
+      buildItems();
+      if (sel.value) {
+        valEl.textContent = sel.options[sel.selectedIndex]?.text || '';
+        valEl.classList.remove('placeholder');
+      }
+    };
+  });
+}
 </script>
 
 </body>
