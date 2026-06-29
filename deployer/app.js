@@ -1150,10 +1150,10 @@ function initEncryptedText() {
 }
 
 function randomizeSalt() {
-  const hex = '0123456789abcdef';
-  let addr = '0x';
-  for (let i = 0; i < 40; i++) addr += hex[Math.floor(Math.random() * 16)];
-  document.getElementById('d-salt').value = `agent-${addr}`;
+  const adj = ['bold','swift','keen','calm','dark','wild','cold','warm','grim','sly','fast','loud','mute','pale','deep','sharp','brave','stern','kind','raw'];
+  const noun = ['falcon','cobra','viper','wolf','hawk','raven','lynx','tiger','bear','fox','stag','owl','crow','shark','eagle','puma','orca','elk','moth','ape'];
+  const name = adj[Math.floor(Math.random() * adj.length)] + '-' + noun[Math.floor(Math.random() * noun.length)];
+  document.getElementById('d-salt').value = `agent-${name}`;
 }
 
 let saltCustom = false;
