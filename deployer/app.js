@@ -1165,6 +1165,7 @@ function toggleSaltMode() {
   saltCustom = !saltCustom;
   if (saltCustom) {
     btn.classList.remove('bg-[rgba(180,158,255,0.15)]');
+    btn.classList.remove('text-[#b49eff]');
     input.removeAttribute('readonly');
     input.classList.remove('opacity-70');
     randomizeBtn.classList.remove('hidden');
@@ -1172,6 +1173,7 @@ function toggleSaltMode() {
     input.focus();
   } else {
     btn.classList.add('bg-[rgba(180,158,255,0.15)]');
+    btn.classList.add('text-[#b49eff]');
     input.setAttribute('readonly', '');
     input.classList.add('opacity-70');
     randomizeBtn.classList.add('hidden');
