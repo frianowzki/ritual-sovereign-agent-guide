@@ -1153,8 +1153,7 @@ function randomizeSalt() {
   const hex = '0123456789abcdef';
   let addr = '0x';
   for (let i = 0; i < 40; i++) addr += hex[Math.floor(Math.random() * 16)];
-  const model = document.getElementById('d-model')?.value || 'agent';
-  document.getElementById('d-salt').value = `${model} agent-${addr.slice(0, 10)}`;
+  document.getElementById('d-salt').value = `agent-${addr}`;
 }
 
 // ═══════════════════════════════════════════════════════════
