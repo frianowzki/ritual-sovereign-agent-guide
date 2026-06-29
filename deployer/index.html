@@ -105,8 +105,7 @@
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Salt (unique per agent)</label>
               <div class="flex gap-1 mb-2">
-                <button onclick="setSaltMode('default')" id="salt-mode-default" class="salt-mode-btn btn-outline rounded-lg px-3 py-1 text-xs font-medium bg-[rgba(180,158,255,0.15)]">Default</button>
-                <button onclick="setSaltMode('custom')" id="salt-mode-custom" class="salt-mode-btn btn-outline rounded-lg px-3 py-1 text-xs font-medium">Custom</button>
+                <button onclick="toggleSaltMode()" id="salt-mode-btn" class="btn-outline rounded-lg px-3 py-1 text-xs font-medium bg-[rgba(180,158,255,0.15)]">Default</button>
               </div>
               <div class="flex gap-2">
                 <input id="d-salt" type="text" value="" placeholder="agent-0x..." readonly class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono opacity-70" />

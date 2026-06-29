@@ -1156,26 +1156,26 @@ function randomizeSalt() {
   document.getElementById('d-salt').value = `agent-${addr}`;
 }
 
-function setSaltMode(mode) {
+let saltCustom = false;
+
+function toggleSaltMode() {
   const input = document.getElementById('d-salt');
-  const defaultBtn = document.getElementById('salt-mode-default');
-  const customBtn = document.getElementById('salt-mode-custom');
+  const btn = document.getElementById('salt-mode-btn');
   const randomizeBtn = document.getElementById('salt-randomize-btn');
-  if (mode === 'default') {
-    defaultBtn.classList.add('bg-[rgba(180,158,255,0.15)]');
-    customBtn.classList.remove('bg-[rgba(180,158,255,0.15)]');
-    input.setAttribute('readonly', '');
-    input.classList.add('opacity-70');
-    randomizeBtn.classList.add('hidden');
-    randomizeSalt();
-  } else {
-    customBtn.classList.add('bg-[rgba(180,158,255,0.15)]');
-    defaultBtn.classList.remove('bg-[rgba(180,158,255,0.15)]');
+  saltCustom = !saltCustom;
+  if (saltCustom) {
+    btn.classList.remove('bg-[rgba(180,158,255,0.15)]');
     input.removeAttribute('readonly');
     input.classList.remove('opacity-70');
     randomizeBtn.classList.remove('hidden');
     input.value = '';
     input.focus();
+  } else {
+    btn.classList.add('bg-[rgba(180,158,255,0.15)]');
+    input.setAttribute('readonly', '');
+    input.classList.add('opacity-70');
+    randomizeBtn.classList.add('hidden');
+    randomizeSalt();
   }
 }
 
