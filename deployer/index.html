@@ -104,9 +104,13 @@
           <div class="space-y-2">
             <div>
               <label class="text-xs text-slate-500 mb-1 block">Salt (unique per agent)</label>
+              <div class="flex gap-1 mb-2">
+                <button onclick="setSaltMode('default')" id="salt-mode-default" class="salt-mode-btn btn-outline rounded-lg px-3 py-1 text-xs font-medium bg-[rgba(180,158,255,0.15)]">Default</button>
+                <button onclick="setSaltMode('custom')" id="salt-mode-custom" class="salt-mode-btn btn-outline rounded-lg px-3 py-1 text-xs font-medium">Custom</button>
+              </div>
               <div class="flex gap-2">
-                <input id="d-salt" type="text" value="" placeholder="agent-0x..." class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono" />
-                <button onclick="randomizeSalt()" class="btn-outline rounded-lg px-3 py-2 text-sm flex-shrink-0" title="Randomize salt"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg></button>
+                <input id="d-salt" type="text" value="" placeholder="agent-0x..." readonly class="w-full rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm mono opacity-70" />
+                <button onclick="randomizeSalt()" id="salt-randomize-btn" class="btn-outline rounded-lg px-3 py-2 text-sm flex-shrink-0 hidden" title="Randomize salt"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg></button>
               </div>
             </div>
             <div>
