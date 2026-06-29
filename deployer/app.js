@@ -1161,7 +1161,9 @@ function initEncryptedText() {
 function randomizeSalt() {
   const adj = ['bold','swift','keen','calm','dark','wild','cold','warm','grim','sly','fast','loud','mute','pale','deep','sharp','brave','stern','kind','raw'];
   const noun = ['falcon','cobra','viper','wolf','hawk','raven','lynx','tiger','bear','fox','stag','owl','crow','shark','eagle','puma','orca','elk','moth','ape'];
-  const name = adj[Math.floor(Math.random() * adj.length)] + '-' + noun[Math.floor(Math.random() * noun.length)];
+  const r = new Uint32Array(2);
+  crypto.getRandomValues(r);
+  const name = adj[r[0] % adj.length] + '-' + noun[r[1] % noun.length];
   document.getElementById('d-salt').value = `agent-${name}`;
 }
 

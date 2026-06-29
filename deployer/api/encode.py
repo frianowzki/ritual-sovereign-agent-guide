@@ -13,8 +13,23 @@ Returns:
 import json
 import os
 import sys
+import time
+from collections import defaultdict
 
 from http.server import BaseHTTPRequestHandler
+
+# Simple in-memory rate limiter (per-IP, resets on cold start)
+_rate_limits = defaultdict(list)
+RATE_LIMIT_WINDOW = 60  # seconds
+RATE_LIMIT_MAX = 10     # requests per window
+
+def _check_rate_limit(ip):
+    now = time.time()
+    _rate_limits[ip] = [t for t in _rate_limits[ip] if now - t < RATE_LIMIT_WINDOW]
+    if len(_rate_limits[ip]) >= RATE_LIMIT_MAX:
+        return False
+    _rate_limits[ip].append(now)
+    return True
 
 # ── Lazy imports (Vercel cold start) ──
 from ecies import encrypt as ecies_encrypt
@@ -228,6 +243,13 @@ def encode_calldata(body: dict) -> dict:
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
+            if not _check_rate_limit(ip):
+                self.send_response(429)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode())
+                return
             content_length = int(self.headers.get("Content-Length", 0))
             if content_length > 50_000:  # 50KB max
                 self.send_response(413)
@@ -242,14 +264,14 @@ class handler(BaseHTTPRequestHandler):
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Origin", "https://sovereign-deployer.vercel.app")
             self.end_headers()
             self.wfile.write(json.dumps(result).encode())
 
         except Exception as e:
             self.send_response(400)
             self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Origin", "https://sovereign-deployer.vercel.app")
             self.end_headers()
             # Sanitize error — don't leak internal details
             msg = str(e).split("\n")[0][:200]
@@ -257,7 +279,7 @@ class handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", "https://sovereign-deployer.vercel.app")
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()

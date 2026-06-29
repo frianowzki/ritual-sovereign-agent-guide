@@ -18,17 +18,18 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('rpc.ritualfoundation') || 
-      event.request.url.includes('explorer.ritualfoundation') ||
-      event.request.url.includes('registry.ritualfoundation')) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
+  const url = event.request.url;
+  // Never cache API calls or external RPCs — always go to network
+  if (url.includes('/api/') || url.includes('rpc.ritualfoundation') || 
+      url.includes('explorer.ritualfoundation') || url.includes('registry.ritualfoundation') ||
+      url.includes('openrouter.ai') || url.includes('api.openai.com') ||
+      url.includes('api.anthropic.com') || url.includes('generativelanguage.googleapis') ||
+      url.includes('huggingface.co')) {
+    event.respondWith(fetch(event.request));
   } else {
     // Network-first for static assets (JS/CSS/HTML) — updates propagate
     event.respondWith(
       fetch(event.request).then(response => {
-        // Cache successful responses for offline
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
