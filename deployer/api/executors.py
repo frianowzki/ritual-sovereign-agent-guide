@@ -68,7 +68,8 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            msg = str(e).split("\n")[0][:200]
+            self.wfile.write(json.dumps({"error": msg}).encode())
 
     def do_OPTIONS(self):
         self.send_response(200)

@@ -229,6 +229,12 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > 50_000:  # 50KB max
+                self.send_response(413)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Payload too large"}).encode())
+                return
             body_bytes = self.rfile.read(content_length)
             body = json.loads(body_bytes)
 
@@ -245,7 +251,9 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            # Sanitize error — don't leak internal details
+            msg = str(e).split("\n")[0][:200]
+            self.wfile.write(json.dumps({"error": msg}).encode())
 
     def do_OPTIONS(self):
         self.send_response(204)

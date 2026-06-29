@@ -1,6 +1,14 @@
 // ═══════════════════════════════════════════════════════════
 //  CONSTANTS
 // ═══════════════════════════════════════════════════════════
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+function isValidAddress(addr) {
+  return /^0x[0-9a-fA-F]{40}$/.test(addr);
+}
 const RITUAL_CHAIN_ID = 1979;
 const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
 const SOVEREIGN_FACTORY = '0x9dC4C054e53bCc4Ce0A0Ff09E890A7a8e817f304';
@@ -263,7 +271,7 @@ async function simulateLLM() {
   resultDiv.classList.remove('hidden');
   resultDiv.style.background = 'rgba(180,158,255,0.08)';
   resultDiv.style.border = '1px solid rgba(180,158,255,0.2)';
-  resultDiv.innerHTML = `<span class="text-slate-400">Testing ${provider}/${model}...</span>`;
+  resultDiv.innerHTML = `<span class="text-slate-400">Testing ${escapeHtml(provider)}/${escapeHtml(model)}...</span>`;
 
   const start = Date.now();
 
@@ -681,7 +689,7 @@ async function deployAgent() {
     }
 
     // Save to localStorage for My Agents
-    const agents = JSON.parse(localStorage.getItem('sr_agents') || '[]');
+    let agents; try { agents = JSON.parse(localStorage.getItem('sr_agents') || '[]'); } catch { agents = []; }
     if (!agents.find(a => a.address.toLowerCase() === harnessAddr.toLowerCase())) {
       agents.push({ address: harnessAddr, salt, timestamp: Date.now() });
       localStorage.setItem('sr_agents', JSON.stringify(agents));
@@ -701,6 +709,7 @@ async function deployAgent() {
 async function checkStatusOnChain() {
   const harness = document.getElementById('s-agent').value.trim();
   if (!harness) { alert('Enter a harness address'); return; }
+  if (!isValidAddress(harness)) { alert('Invalid address format'); return; }
 
   const btn = document.getElementById('status-btn');
   btn.disabled = true;
@@ -740,7 +749,7 @@ async function checkStatusOnChain() {
           <p class="text-red-400 text-sm">No contract at this address</p>
           <p class="text-xs text-slate-500">This address has no deployed bytecode on Ritual Chain.</p>
           <div class="flex justify-center gap-3 pt-2">
-            <a href="https://explorer.ritualfoundation.org/address/${harness}" target="_blank" class="btn-outline rounded-lg px-3 py-1.5 text-xs">View on Explorer</a>
+            <a href="https://explorer.ritualfoundation.org/address/${escapeHtml(harness)}" target="_blank" class="btn-outline rounded-lg px-3 py-1.5 text-xs">View on Explorer</a>
           </div>
         </div>
       `;
@@ -772,13 +781,13 @@ async function checkStatusOnChain() {
           </div>
         </div>
         <div class="flex justify-center gap-3 pt-2 border-t border-white/5">
-          <a href="https://explorer.ritualfoundation.org/agents/${harness}" target="_blank" class="btn-outline rounded-lg px-3 py-1.5 text-xs">View Agent</a>
+          <a href="https://explorer.ritualfoundation.org/agents/${escapeHtml(harness)}" target="_blank" class="btn-outline rounded-lg px-3 py-1.5 text-xs">View Agent</a>
           <a href="https://explorer.ritualfoundation.org/agents" target="_blank" class="btn-outline rounded-lg px-3 py-1.5 text-xs">All Agents</a>
         </div>
       </div>
     `;
   } catch (err) {
-    content.innerHTML = `<p class="text-red-400 text-sm">Error: ${err.message}</p>`;
+    content.innerHTML = `<p class="text-red-400 text-sm">Error: ${escapeHtml(err.message)}</p>`;
   } finally {
     btn.disabled = false;
     btn.innerHTML = 'Check Status';
@@ -893,7 +902,7 @@ async function runSmokeTest() {
   } catch (err) {
     resultDiv.style.background = 'rgba(239,68,68,0.1)';
     resultDiv.style.border = '1px solid rgba(239,68,68,0.3)';
-    resultDiv.innerHTML = `<span class="text-red-400">✗ Network error: ${err.message}</span>`;
+    resultDiv.innerHTML = `<span class="text-red-400">✗ Network error: ${escapeHtml(err.message)}</span>`;
     smokeTestPassed = false;
   } finally {
     btn.disabled = false;
@@ -1021,7 +1030,7 @@ async function refreshExecutors() {
     if (wrap && wrap._refreshSelect) wrap._refreshSelect();
     
   } catch (err) {
-    sel.innerHTML = `<option value="">Error: ${err.message}</option>`;
+    sel.innerHTML = `<option value="">Error: ${escapeHtml(err.message)}</option>`;
     countEl.textContent = 'Failed to load executors.';
   } finally {
     btn.disabled = false;
@@ -1515,7 +1524,7 @@ async function fetchFromFactoryEvents() {
 // ── localStorage Cache ──
 function fetchFromCache() {
   const agents = new Map();
-  const saved = JSON.parse(localStorage.getItem('sr_agents') || '[]');
+  let saved; try { saved = JSON.parse(localStorage.getItem('sr_agents') || '[]'); } catch { saved = []; }
   for (const a of saved) {
     agents.set(a.address.toLowerCase(), { ...a, source: 'cache' });
   }
