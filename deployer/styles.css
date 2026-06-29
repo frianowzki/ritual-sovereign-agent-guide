@@ -387,3 +387,19 @@
 @media (min-width: 768px) {
   #panel-deploy .flex.flex-col > .glass:first-child { margin-bottom: 0.5rem; }
 }
+
+/* Wave animation — 25vh bottom */
+.wave-container {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 25vh;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+.wave-container svg { position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; }
+.wave-1 { animation: wave-drift 8s linear infinite; opacity: 0.06; }
+.wave-2 { animation: wave-drift 12s linear infinite reverse; opacity: 0.04; }
+.wave-3 { animation: wave-drift 16s linear infinite; opacity: 0.03; }
+@keyframes wave-drift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+body { position: relative; z-index: 1; }
+header, main, footer { position: relative; z-index: 2; }
