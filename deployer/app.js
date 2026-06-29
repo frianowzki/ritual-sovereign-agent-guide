@@ -130,6 +130,8 @@ async function connectWallet() {
     localStorage.setItem('sr_connected', '1');
     startBalancePolling();
     updateWalletUI(true);
+    // Auto-generate salt with model + address format
+    if (!document.getElementById('d-salt').value.trim()) randomizeSalt();
 
   } catch (err) {
     console.error(err);
@@ -415,7 +417,8 @@ async function deployAgent() {
   const model = document.getElementById('d-model').value;
   const hfToken = document.getElementById('d-hftoken').value.trim();
   const hfRepo = document.getElementById('d-hfrepo').value.trim();
-  const salt = document.getElementById('d-salt').value.trim();
+  let salt = document.getElementById('d-salt').value.trim();
+  if (!salt) { randomizeSalt(); salt = document.getElementById('d-salt').value.trim(); }
   const prompt = document.getElementById('d-prompt').value.trim();
   const freq = parseInt(document.getElementById('d-freq').value);
   const windowCalls = parseInt(document.getElementById('d-window').value);
@@ -1054,6 +1057,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(refreshExecutors, 1000);
   setTimeout(updateExecutorHealth, 1500);
   
+  // Auto-generate default salt
+  setTimeout(randomizeSalt, 200);
+  
   // Wire smoke test readiness check to inputs
   ['d-hfrepo', 'd-hftoken', 'd-provider', 'd-apikey'].forEach(id => {
     const el = document.getElementById(id);
@@ -1144,10 +1150,11 @@ function initEncryptedText() {
 }
 
 function randomizeSalt() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let salt = 'agent-';
-  for (let i = 0; i < 8; i++) salt += chars[Math.floor(Math.random() * chars.length)];
-  document.getElementById('d-salt').value = salt;
+  const hex = '0123456789abcdef';
+  let addr = '0x';
+  for (let i = 0; i < 40; i++) addr += hex[Math.floor(Math.random() * 16)];
+  const model = document.getElementById('d-model')?.value || 'agent';
+  document.getElementById('d-salt').value = `${model} agent-${addr.slice(0, 10)}`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1790,7 +1797,7 @@ if (typeof window !== 'undefined' && window.ethereum) {
 }
 // ═══ .env Generator ═══
 function generateEnv() {
-  const salt = document.getElementById("d-salt")?.value || "my-sovereign-agent";
+  const salt = document.getElementById("d-salt")?.value || (() => { randomizeSalt(); return document.getElementById("d-salt").value; })();
   const prompt = document.getElementById("d-prompt")?.value || "";
   const dataset = document.getElementById("d-dataset")?.value || "";
   const token = document.getElementById("d-hftoken")?.value || "";
